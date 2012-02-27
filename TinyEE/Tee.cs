@@ -1,25 +1,47 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
 
 namespace TinyEE
 {
+    /// <summary>
+    /// The point of service (fascade) for the Tiny Expression Evaluator
+    /// </summary>
     public static class TEE
     {
         #region Public API
+        /// <summary>
+        /// Evaluates the supplied string as an expression
+        /// </summary>
+        /// <param name="expression">The expression string.</param>
+        /// <returns></returns>
         public static object Evaluate(string expression)
         {
-            return Evaluate(expression, ZeroVariableFunctor);
+            return Evaluate(expression, ContextFunctor.ZeroVariable);
         }
 
+
+        /// <summary>
+        /// Evaluates the supplied string as an expression. 
+        /// Variables within the expression shall be resolved using the context object's properties or fields.
+        /// In case the object implements IDictionary of strings, the indexer will be used instead.
+        /// </summary>
+        /// <param name="expression">The expression string.</param>
+        /// <param name="context">The context object.</param>
+        /// <returns></returns>
         public static object Evaluate(string expression, object context)
         {
-            var contextFunctor = GetContextFunctor(context);
+            var contextFunctor = ContextFunctor.GetForObject(context);
             return Evaluate(expression, contextFunctor);
         }
 
+        /// <summary>
+        /// Evaluates the specified expression.
+        /// </summary>
+        /// <param name="expression">The expression.</param>
+        /// <param name="getVar">The get var.</param>
+        /// <returns></returns>
         public static object Evaluate(string expression, Func<string, object> getVar)
         {
             return Parse(expression)
@@ -34,6 +56,13 @@ namespace TinyEE
             return GetVariableNamesRecursive(tree);
         }
 
+        public static string TranslateToJs(string expression)
+        {
+            return Parse(expression).GetJsExpr();
+        }
+        #endregion
+
+        #region Private
         private static IEnumerable<string> GetVariableNamesRecursive(ParseNode node)
         {
             if (node.Token.Type == TokenType.Variable)
@@ -53,10 +82,8 @@ namespace TinyEE
                     }
                 }
             }
-        } 
-        #endregion
+        }
 
-        #region Private
         private static ParseTree Parse(string expression)
         {
             var parseTree = new Parser(new Scanner()).Parse(expression);
@@ -72,39 +99,11 @@ namespace TinyEE
         private static Expression<Func<Func<string, object>, object>> Transform(this ParseNode parseTree)
         {
             var contextExpr = Expression.Parameter(typeof(Func<string, object>), "context");
-            var expressionTree = ParseTreeTransform.GetAST(parseTree.Nodes[0], contextExpr);
+            var expressionTree = ASTTransformer.GetAST(parseTree.Nodes[0], contextExpr);
             return Expression.Lambda<Func<Func<string, object>, object>>(
                 Expression.TypeAs(expressionTree, typeof(object)),
                 contextExpr);
         }
-
-        private static Func<string, object> GetContextFunctor(object context)
-        {
-            Func<string, object> result;
-            IDictionary dict;
-
-            if ((dict = context as IDictionary) != null)
-            {
-                result = varName => dict[varName];
-            }
-            else
-            {
-                result = varName =>
-                {
-                    var memGetter = Expression.Lambda<Func<string, object>>(
-                        Expression.Dynamic(
-                            DLRUtil.GetFieldPropertyBinder(varName), typeof(object)))
-                        .Compile();
-                    return memGetter(varName);
-                };
-            }
-            return result;
-        }
-
-        private static object ZeroVariableFunctor(string varName)
-        {
-            throw new KeyNotFoundException("Variable not found");
-        } 
         #endregion
     }
 }

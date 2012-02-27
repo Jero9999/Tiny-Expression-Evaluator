@@ -38,11 +38,13 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Extension\StringExtension.cs" />
-    <Compile Include="Runtime\DLRUtil.cs" />
+    <Compile Include="Runtime\ContextFunctor.cs" />
+    <Compile Include="Transformer\DLRUtil.cs" />
     <Compile Include="Runtime\Functions.cs" />
     <Compile Include="Parser\Parser.cs" />
     <Compile Include="Parser\ParseTree.cs" />
-    <Compile Include="Runtime\ParseTreeTransform.cs" />
+    <Compile Include="Transformer\JavaScriptTransformer.cs" />
+    <Compile Include="Transformer\ASTTransformer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Parser\Scanner.cs" />
     <Compile Include="Tee.cs" />
