@@ -118,6 +118,8 @@ namespace Formy.Evaluation.Test
         [TestCase("-5<=-1<=0", true)]
         [TestCase("1<>2<>3", true)]
         [TestCase("1=1=1", true)]
+        [TestCase("5>=1<>0", true)]
+        [TestCase("5>=1=0", false)]
         [TestCase("true and true and false", false)]
         [TestCase("false or false or true", true)]
         [TestCase("not (not true)", true)]
