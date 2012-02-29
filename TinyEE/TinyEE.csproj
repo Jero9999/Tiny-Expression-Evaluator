@@ -37,6 +37,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="ParsedExpression.cs" />
     <Compile Include="Extension\StringExtension.cs" />
     <Compile Include="Runtime\ContextFunctor.cs" />
     <Compile Include="Transformer\DLRUtil.cs" />

@@ -130,6 +130,11 @@ namespace TinyEE
             return Math.Pow(val1, val2);
         }
 
+        //public static dynamic POW(dynamic val1, dynamic val2)
+        //{
+        //    return Math.Pow(val1, val2);
+        //}
+
         //public static BigInteger Pow(BigInteger left, int right)
         //{
         //    return BigInteger.Pow(left, right);

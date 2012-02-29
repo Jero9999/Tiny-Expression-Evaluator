@@ -89,7 +89,8 @@ namespace TinyEE
         {
             Debug.Assert(childNodes.Length == 3 || childNodes.Length == 2);
             var argExprs = childNodes.Length == 3
-                               ? childNodes[1].Nodes
+                               ? childNodes[1]
+                                     .Nodes
                                      .Where(node => node.Token.Type != TokenType.COMMA)
                                      .Select(n => GetJsExpr(n))
                                : Enumerable.Empty<string>();
