@@ -7,7 +7,12 @@ namespace TinyEE
 {
     internal static class ContextFunctor
     {
-        internal static Func<string, object> GetForObject(object context)
+        internal static object ZeroVariable(string varName)
+        {
+            throw new KeyNotFoundException("Variable not found");
+        }
+
+        internal static Func<string, object> GetForObject(object context, bool invasive = false)
         {
             if (context == null)
             {
@@ -22,22 +27,24 @@ namespace TinyEE
             }
             else
             {
+                var cache = new Dictionary<string,object>();
                 result = varName =>
                 {
-                    var body = Expression.Dynamic(
-                                DLRUtil.GetFieldPropertyBinder(varName),
-                                typeof(object),
-                                Expression.Constant(context));
-                    var memGetter = Expression.Lambda<Func<string, object>>(body, Expression.Parameter(typeof(string))).Compile();
-                    return memGetter(varName);
+                    object value;
+                    //TODO:query default (string) indexer
+                    if (!cache.TryGetValue(varName, out value))
+                    {
+                        var body = Expression.Convert(
+                                    Expression.PropertyOrField(
+                                        Expression.Constant(context), varName), 
+                                    typeof(object));
+                        value = Expression.Lambda<Func<object>>(body).Compile().Invoke();
+                        cache[varName] = value;
+                    }
+                    return value;
                 };
             }
             return result;
         }
-
-        internal static object ZeroVariable(string varName)
-        {
-            throw new KeyNotFoundException("Variable not found");
-        } 
     }
 }
