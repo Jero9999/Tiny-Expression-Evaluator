@@ -21,7 +21,6 @@ namespace TinyEE
             return Evaluate(expression, ContextFunctor.ZeroVariable);
         }
 
-
         /// <summary>
         /// Evaluates the supplied string as an expression. 
         /// Variables within the expression shall be resolved using the context object's properties or fields.
@@ -44,21 +43,59 @@ namespace TinyEE
         /// <returns></returns>
         public static object Evaluate(string expression, Func<string, object> getVar)
         {
-            return Parse(expression)
-                    .Transform()
+            return ParseInternal(expression)
+                    .TransformInternal()
                     .Compile()
                     .Invoke(getVar);
         }
 
+        /// <summary>
+        /// Parse and compile an expression so it can be called multiple times, in different context without incurring the cost of scanning, parsing, and AST transforming
+        /// </summary>
+        /// <param name="expression">The expression.</param>
+        /// <param name="enumerateVariables">if set to <c>true</c> then enumerate all variables.</param>
+        /// <param name="doTranslateToJs">if set to <c>true</c> do translate to JS.</param>
+        /// <returns></returns>
+        public static ParsedExpression Parse(string expression, bool enumerateVariables = false, bool doTranslateToJs = false)
+        {
+            var parsedTree = ParseInternal(expression);
+            var variables = enumerateVariables 
+                                ? GetVariableNamesRecursive(parsedTree).Distinct() 
+                                : Enumerable.Empty<string>();
+            var jsExpr = doTranslateToJs 
+                            ? parsedTree.GetJsExpr() 
+                            : null;
+            var ast = parsedTree.TransformInternal();
+            
+            var compiledExpr = ast.Compile();
+            return new ParsedExpression(compiledExpr)
+            {
+                Text = expression,
+                Variables = variables,
+                CSharpText = ast.ToString(),
+                JsText = jsExpr
+            };
+        }
+
+        /// <summary>
+        /// Gets the variable names.
+        /// </summary>
+        /// <param name="expression">The expression.</param>
+        /// <returns></returns>
         public static IEnumerable<string> GetVariableNames(string expression)
         {
             var tree = new Parser(new Scanner()).Parse(expression);
-            return GetVariableNamesRecursive(tree);
+            return GetVariableNamesRecursive(tree).Distinct();
         }
 
+        /// <summary>
+        /// Translates the privided expression to Javascript.
+        /// </summary>
+        /// <param name="expression">The expression.</param>
+        /// <returns></returns>
         public static string TranslateToJs(string expression)
         {
-            return Parse(expression).GetJsExpr();
+            return ParseInternal(expression).GetJsExpr();
         }
         #endregion
 
@@ -84,7 +121,7 @@ namespace TinyEE
             }
         }
 
-        private static ParseTree Parse(string expression)
+        private static ParseTree ParseInternal(string expression)
         {
             var parseTree = new Parser(new Scanner()).Parse(expression);
             if (parseTree.Errors.Count > 0)
@@ -96,10 +133,10 @@ namespace TinyEE
             return parseTree;
         }
 
-        private static Expression<Func<Func<string, object>, object>> Transform(this ParseNode parseTree)
+        private static Expression<Func<Func<string, object>, object>> TransformInternal(this ParseNode parseTree)
         {
             var contextExpr = Expression.Parameter(typeof(Func<string, object>), "context");
-            var expressionTree = ASTTransformer.GetAST(parseTree.Nodes[0], contextExpr);
+            var expressionTree = parseTree.GetAST(contextExpr);
             return Expression.Lambda<Func<Func<string, object>, object>>(
                 Expression.TypeAs(expressionTree, typeof(object)),
                 contextExpr);
