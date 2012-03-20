@@ -7,7 +7,7 @@ namespace TinyEE
 {
     #region Parser
 
-    public partial class Parser 
+    internal partial class Parser 
     {
         private Scanner scanner;
         private ParseTree tree;
@@ -43,7 +43,7 @@ namespace TinyEE
 
 
             
-            tok = scanner.LookAhead(TokenType.NOT, TokenType.MINUS, TokenType.STRING, TokenType.DECIMAL, TokenType.INTEGER, TokenType.TRUE, TokenType.FALSE, TokenType.NULL, TokenType.LPAREN, TokenType.FUNCTION, TokenType.IDENTIFIER);
+            tok = scanner.LookAhead(TokenType.NOT, TokenType.MINUS, TokenType.STRING, TokenType.DECIMAL, TokenType.INTEGER, TokenType.TRUE, TokenType.FALSE, TokenType.NULL, TokenType.LPAREN, TokenType.FUNCTION, TokenType.IDENTIFIER, TokenType.DOLLAR);
             if (tok.Type == TokenType.NOT
                 || tok.Type == TokenType.MINUS
                 || tok.Type == TokenType.STRING
@@ -54,7 +54,8 @@ namespace TinyEE
                 || tok.Type == TokenType.NULL
                 || tok.Type == TokenType.LPAREN
                 || tok.Type == TokenType.FUNCTION
-                || tok.Type == TokenType.IDENTIFIER)
+                || tok.Type == TokenType.IDENTIFIER
+                || tok.Type == TokenType.DOLLAR)
             {
                 ParseExpression(node);
             }
@@ -443,7 +444,64 @@ namespace TinyEE
             }
 
             
-            ParseMember(node);
+            tok = scanner.LookAhead(TokenType.STRING, TokenType.DECIMAL, TokenType.INTEGER, TokenType.TRUE, TokenType.FALSE, TokenType.NULL, TokenType.LPAREN, TokenType.FUNCTION, TokenType.IDENTIFIER, TokenType.DOLLAR);
+            switch (tok.Type)
+            {
+                case TokenType.STRING:
+                case TokenType.DECIMAL:
+                case TokenType.INTEGER:
+                case TokenType.TRUE:
+                case TokenType.FALSE:
+                case TokenType.NULL:
+                case TokenType.LPAREN:
+                case TokenType.FUNCTION:
+                case TokenType.IDENTIFIER:
+                    ParseMember(node);
+                    break;
+                case TokenType.DOLLAR:
+                    ParseMethodCall(node);
+                    break;
+                default:
+                    tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found.", 0x0002, 0, tok.StartPos, tok.StartPos, tok.Length));
+                    break;
+            }
+
+            parent.Token.UpdateRange(node.Token);
+        }
+
+        private void ParseMethodCall(ParseNode parent)
+        {
+            Token tok;
+            ParseNode n;
+            ParseNode node = parent.CreateNode(scanner.GetToken(TokenType.MethodCall), "MethodCall");
+            parent.Nodes.Add(node);
+
+
+            
+            tok = scanner.Scan(TokenType.DOLLAR);
+            n = node.CreateNode(tok, tok.ToString() );
+            node.Token.UpdateRange(tok);
+            node.Nodes.Add(n);
+            if (tok.Type != TokenType.DOLLAR) {
+                tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found. Expected " + TokenType.DOLLAR.ToString(), 0x1001, 0, tok.StartPos, tok.StartPos, tok.Length));
+                return;
+            }
+
+            
+            ParseVariable(node);
+
+            
+            tok = scanner.Scan(TokenType.COLON);
+            n = node.CreateNode(tok, tok.ToString() );
+            node.Token.UpdateRange(tok);
+            node.Nodes.Add(n);
+            if (tok.Type != TokenType.COLON) {
+                tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found. Expected " + TokenType.COLON.ToString(), 0x1001, 0, tok.StartPos, tok.StartPos, tok.Length));
+                return;
+            }
+
+            
+            ParseFunctionCall(node);
 
             parent.Token.UpdateRange(node.Token);
         }
@@ -649,7 +707,7 @@ namespace TinyEE
             }
 
             
-            tok = scanner.LookAhead(TokenType.NOT, TokenType.MINUS, TokenType.STRING, TokenType.DECIMAL, TokenType.INTEGER, TokenType.TRUE, TokenType.FALSE, TokenType.NULL, TokenType.LPAREN, TokenType.FUNCTION, TokenType.IDENTIFIER);
+            tok = scanner.LookAhead(TokenType.NOT, TokenType.MINUS, TokenType.STRING, TokenType.DECIMAL, TokenType.INTEGER, TokenType.TRUE, TokenType.FALSE, TokenType.NULL, TokenType.LPAREN, TokenType.FUNCTION, TokenType.IDENTIFIER, TokenType.DOLLAR);
             if (tok.Type == TokenType.NOT
                 || tok.Type == TokenType.MINUS
                 || tok.Type == TokenType.STRING
@@ -660,7 +718,8 @@ namespace TinyEE
                 || tok.Type == TokenType.NULL
                 || tok.Type == TokenType.LPAREN
                 || tok.Type == TokenType.FUNCTION
-                || tok.Type == TokenType.IDENTIFIER)
+                || tok.Type == TokenType.IDENTIFIER
+                || tok.Type == TokenType.DOLLAR)
             {
                 ParseArgumentList(node);
             }

@@ -9,7 +9,7 @@ namespace TinyEE
 {
     #region Scanner
 
-    public partial class Scanner
+    internal partial class Scanner
     {
         public string Input;
         public int StartPos = 0;
@@ -114,6 +114,14 @@ namespace TinyEE
             regex = new Regex(@",", RegexOptions.Compiled);
             Patterns.Add(TokenType.COMMA, regex);
             Tokens.Add(TokenType.COMMA);
+
+            regex = new Regex(@":", RegexOptions.Compiled);
+            Patterns.Add(TokenType.COLON, regex);
+            Tokens.Add(TokenType.COLON);
+
+            regex = new Regex(@"\$", RegexOptions.Compiled);
+            Patterns.Add(TokenType.DOLLAR, regex);
+            Tokens.Add(TokenType.DOLLAR);
 
             regex = new Regex(@"^$", RegexOptions.Compiled);
             Patterns.Add(TokenType.EOF, regex);
@@ -271,7 +279,7 @@ namespace TinyEE
 
     #region Token
 
-    public enum TokenType
+    internal enum TokenType
     {
 
             //Non terminal tokens:
@@ -289,50 +297,53 @@ namespace TinyEE
             Multiplication= 9,
             Power   = 10,
             Negation= 11,
-            Member  = 12,
-            MemberAccess= 13,
-            Base    = 14,
-            Variable= 15,
-            IndexAccess= 16,
-            FunctionCall= 17,
-            ArgumentList= 18,
-            Literal = 19,
-            Group   = 20,
+            MethodCall= 12,
+            Member  = 13,
+            MemberAccess= 14,
+            Base    = 15,
+            Variable= 16,
+            IndexAccess= 17,
+            FunctionCall= 18,
+            ArgumentList= 19,
+            Literal = 20,
+            Group   = 21,
 
             //Terminal tokens:
-            PLUS    = 21,
-            MINUS   = 22,
-            STAR    = 23,
-            FSLASH  = 24,
-            EXPONENT= 25,
-            LPAREN  = 26,
-            RPAREN  = 27,
-            LBRACKET= 28,
-            RBRACKET= 29,
-            EQUAL   = 30,
-            LT      = 31,
-            GT      = 32,
-            LTE     = 33,
-            GTE     = 34,
-            NOTEQUAL= 35,
-            AND     = 36,
-            OR      = 37,
-            NOT     = 38,
-            DOT     = 39,
-            COMMA   = 40,
-            EOF     = 41,
-            TRUE    = 42,
-            FALSE   = 43,
-            NULL    = 44,
-            INTEGER = 45,
-            DECIMAL = 46,
-            STRING  = 47,
-            FUNCTION= 48,
-            IDENTIFIER= 49,
-            WS      = 50
+            PLUS    = 22,
+            MINUS   = 23,
+            STAR    = 24,
+            FSLASH  = 25,
+            EXPONENT= 26,
+            LPAREN  = 27,
+            RPAREN  = 28,
+            LBRACKET= 29,
+            RBRACKET= 30,
+            EQUAL   = 31,
+            LT      = 32,
+            GT      = 33,
+            LTE     = 34,
+            GTE     = 35,
+            NOTEQUAL= 36,
+            AND     = 37,
+            OR      = 38,
+            NOT     = 39,
+            DOT     = 40,
+            COMMA   = 41,
+            COLON   = 42,
+            DOLLAR  = 43,
+            EOF     = 44,
+            TRUE    = 45,
+            FALSE   = 46,
+            NULL    = 47,
+            INTEGER = 48,
+            DECIMAL = 49,
+            STRING  = 50,
+            FUNCTION= 51,
+            IDENTIFIER= 52,
+            WS      = 53
     }
 
-    public class Token
+    internal class Token
     {
         private int startpos;
         private int endpos;
