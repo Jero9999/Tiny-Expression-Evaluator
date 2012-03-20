@@ -36,7 +36,7 @@ namespace TinyEE
                     {
                         var body = Expression.Convert(
                                     Expression.PropertyOrField(
-                                        Expression.Constant(context), varName), 
+                                        Expression.Constant(context), varName),
                                     typeof(object));
                         value = Expression.Lambda<Func<object>>(body).Compile().Invoke();
                         cache[varName] = value;
