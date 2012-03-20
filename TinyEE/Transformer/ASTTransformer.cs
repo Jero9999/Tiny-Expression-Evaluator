@@ -1,8 +1,10 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
 using System.Reflection;
+using System.Runtime.CompilerServices;
 
 namespace TinyEE
 {
@@ -53,7 +55,13 @@ namespace TinyEE
                     result = childNodes[1].GetAST(context);
                     break;
                 case TokenType.Variable:
-                    result = GetVariableAST(childNodes, context);
+                    var variableName = childNodes[0].Token.Text;
+                    result = GetVariableAST(variableName, context);
+                    break;
+                case TokenType.MethodCall:
+                    result = childNodes.Length == 4
+                                 ? GetMethodAST(childNodes, context)
+                                 : GetInnerAST(childNodes, context);
                     break;
                 case TokenType.Member:
                     result = childNodes.Length >= 3
@@ -84,12 +92,14 @@ namespace TinyEE
                     result = Expression.Constant(false);
                     break;
                 case TokenType.NULL:
-                case TokenType.EOF://reached EOF means that expression is empty
+                case TokenType.EOF:
+                    //reached EOF means that expression is empty    
                     result = Expression.Constant(null);
                     break;
                 default:
                     throw new InvalidOperationException("Should never reached here");
             }
+
             return result;
         }
 
@@ -150,7 +160,7 @@ namespace TinyEE
             Debug.Assert(nodes.Length >= 3 && nodes.Length % 2 == 1);
             return start == 0
                        ? nodes[start].GetAST(context)
-                       : Expression.Dynamic(DLRUtil.GetStaticFunctionCallBinder("POW", 2),
+                       : Expression.Dynamic(DLRUtil.GetFunctionCallBinder("POW", 2),
                                             typeof(object),
                                             FunctionsExpression,
                                             GetPowerAST(nodes, start - 2, context),
@@ -206,31 +216,55 @@ namespace TinyEE
             return result;
         }
 
+        private static Expression GetMethodAST(ParseNode[] nodes, Expression context)
+        {
+            //method calls are not chainable and can only be invoked on system variables (variables beginning with $)
+            Debug.Assert(nodes.Length == 4);
+            var varName = nodes[0].Token.Text + nodes[1].Nodes[0].Token.Text;
+            var @var = GetVariableAST(varName, context);
+            
+            var fnNodes = nodes[3].Nodes;
+            var argExprs = fnNodes.Count == 3
+                               ? GetArgumentsAST(fnNodes[1].Nodes.ToArray(), context)
+                               : Enumerable.Empty<Expression>();
+            var binder = GetFunctionCallBinder(fnNodes, argExprs.Count(), false);
+            return Expression.Dynamic(binder, typeof (object), new[] {@var}.Concat(argExprs));
+        }
+
         private static Expression GetFunctionAST(ParseNode[] childNodes, Expression context)
         {
             //restrict function calls to static functions defined on class Functions only
             Debug.Assert(childNodes.Length == 3 || childNodes.Length == 2);
             var argExprs = childNodes.Length == 3
-                               ? childNodes[1].Nodes
-                                             .Where(node => node.Token.Type != TokenType.COMMA)
-                                             .Select(n => GetAST(n, context))
-                               : Enumerable.Empty<Expression>();
-            
-            var funcText = childNodes[0].Token.Text;
-            Debug.Assert(funcText.Length >= 2 && funcText.EndsWith("("));
-            var funcName = funcText.Substring(0, funcText.Length - 1)
-                                   .ToUpperInvariant();
-
-            return Expression.Dynamic(DLRUtil.GetStaticFunctionCallBinder(funcName, argExprs.Count()),
+                            ? GetArgumentsAST(childNodes[1].Nodes.ToArray(), context)
+                            : Enumerable.Empty<Expression>();
+            return Expression.Dynamic(GetFunctionCallBinder(childNodes, argExprs.Count(), true),
                                         typeof(object),
                                         new[] { FunctionsExpression }.Concat(argExprs));
         }
 
-        private static Expression GetVariableAST(ParseNode[] childNodes, Expression context)
+        private static CallSiteBinder GetFunctionCallBinder(IList<ParseNode> nodes, int argCount, bool isStatic)
+        {
+            var funcText = nodes[0].Token.Text;
+            Debug.Assert(funcText.Length >= 2 && funcText.EndsWith("("));
+            var funcName = funcText.Substring(0, funcText.Length - 1);
+            if (isStatic)
+            {
+                funcName = funcName.ToUpperInvariant();
+            }
+            return DLRUtil.GetFunctionCallBinder(funcName, argCount, isStatic);
+        }
+
+        private static IEnumerable<Expression> GetArgumentsAST(ParseNode[] nodes, Expression context)
+        {
+            return nodes.Where(node => node.Token.Type != TokenType.COMMA)
+                        .Select(n => GetAST(n, context));
+        }
+
+        private static Expression GetVariableAST(string variableName, Expression context)
         {
             //Rewrite variable expressions to function calls that invoke the context (getVar) functor
-            Debug.Assert(childNodes.Length == 1);
-            var variableName = childNodes[0].Token.Text;
+            
             return Expression.Call(context, VariableResolverInfo, Expression.Constant(variableName));
         }
 
