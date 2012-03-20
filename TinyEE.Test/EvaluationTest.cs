@@ -11,7 +11,7 @@ namespace Formy.Evaluation.Test
     public class EvaluationTest
     {
         //TODO:test for integer overflow
-        //TODO:test functions
+        //TODO:test each predefined functions
 
         public struct Person
         {
@@ -27,6 +27,11 @@ namespace Formy.Evaluation.Test
             public string this[long index]
             {
                 get { return index.ToString(); }
+            }
+
+            public override string ToString()
+            {
+                return Name + "(" + Age + ")";
             }
         }
 
@@ -50,14 +55,15 @@ namespace Formy.Evaluation.Test
             dt.Rows.Add("four", 4, new DateTime(2012,12,12,12,12,12), false, 0.125m);
             
             _context = new Dictionary<string,object>
-                           {
-                               {"x",42},
-                               {"table01A", dt},
-                               {"array01A", new[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 0}},
-                               {"elizabeth", new Person{ Name = "Elizabeth", Age=27, Married = true }},
-                               {"lookup", new Dictionary<string, object> {{"key1", 1}, {"key2", null}}},
-                               {"echo", new Person{Name = "echo"}},
-                           };
+            {
+                {"x",42},
+                {"table01A", dt},
+                {"array01A", new[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 0}},
+                {"elizabeth", new Person{ Name = "Elizabeth", Age=27, Married = true }},
+                {"lookup", new Dictionary<string, object> {{"key1", 1}, {"key2", null}}},
+                {"echo", new Person{Name = "echo"}},
+                {"$usr", new Person{Name = "Anonymous", Age=31337}},
+            };
         }
 
         [Test]
@@ -104,6 +110,7 @@ namespace Formy.Evaluation.Test
 
         [Test]
         [TestCase(@"echo.Name.Length", 4)]
+        [TestCase(@"$usr:ToString()", "Anonymous(31337)")]
         [TestCase(@"table01A.Rows[0][""col1""]", "one")]
         [TestCase(@"table01A.Rows[3][""col3""]", "12/12/2012 12:12:12 PM")]
         [TestCase("1 + 2 + 3", 6)]
