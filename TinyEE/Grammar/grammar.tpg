@@ -1,7 +1,8 @@
 //Tiny Parser Generator v1.3
 //Copyright © Herre Kuijpers 2008-2012
 
-<% @TinyPG Namespace="Tee" %>
+<% @TinyPG Namespace="TinyEE" %>
+
 PLUS 		-> @"\+";
 MINUS 		-> @"-";
 STAR 		-> @"\*";
@@ -22,6 +23,8 @@ OR		-> @"[Oo][Rr]";
 NOT		-> @"[Nn][Oo][Tt]";
 DOT		-> @"\.";
 COMMA		-> @",";
+COLON		-> @":";
+DOLLAR		-> @"\$";
 EOF        	-> @"^$";
 
 TRUE        	-> @"[Tt][Rr][Uu][Ee]";
@@ -43,13 +46,15 @@ Compare 		-> Addition ((EQUAL | GT | LT | GTE | LTE | NOTEQUAL) Addition)*;
 Addition 		-> Multiplication ((PLUS | MINUS) Multiplication)*;
 Multiplication 	-> Power ((STAR | FSLASH) Power)*;
 Power 			-> Negation (EXPONENT Negation)*;
-Negation		-> MINUS? Member;
+Negation		-> MINUS? (Member|MethodCall);
+MethodCall		-> DOLLAR Variable COLON FunctionCall;
 Member 		-> Base (DOT MemberAccess | LBRACKET IndexAccess)*;
 MemberAccess 		-> IDENTIFIER;
 Base 			-> Literal | Group | FunctionCall | Variable;
 Variable		-> IDENTIFIER;
 IndexAccess		-> (STRING|INTEGER) RBRACKET;
 FunctionCall		-> FUNCTION ArgumentList? RPAREN;
+
 ArgumentList		-> Expression (COMMA Expression)*;
 Literal		-> STRING | DECIMAL | INTEGER | TRUE | FALSE | NULL;
 Group			-> LPAREN Expression RPAREN;
