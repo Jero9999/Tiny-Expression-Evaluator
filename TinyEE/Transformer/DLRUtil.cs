@@ -7,7 +7,7 @@ using Microsoft.CSharp.RuntimeBinder;
 
 namespace TinyEE
 {
-    public static class DLRUtil
+    internal static class DLRUtil
     {
         internal static CallSiteBinder GetUnaryBinder(TokenType tokenType)
         {
@@ -29,9 +29,18 @@ namespace TinyEE
             return Binder.GetIndex(CSharpBinderFlags.None, null, GetArgInfo(2));
         }
 
-        internal static CallSiteBinder GetStaticFunctionCallBinder(string name, int argsCount = 0)
+        internal static CallSiteBinder GetFunctionCallBinder(string name, int argsCount = 0, bool isStatic = true)
         {
-            return Binder.InvokeMember(CSharpBinderFlags.None, name, null, null, new[] { CSharpArgumentInfo.Create(CSharpArgumentInfoFlags.IsStaticType, null) }.Concat(GetArgInfo(argsCount)));
+            return Binder.InvokeMember(CSharpBinderFlags.None, 
+                                        name, 
+                                        null, 
+                                        typeof(object), 
+                                        new[] {
+                                            isStatic 
+                                                ? CSharpArgumentInfo.Create(CSharpArgumentInfoFlags.IsStaticType, null)
+                                                : CSharpArgumentInfo.Create(CSharpArgumentInfoFlags.None, null)
+                                        }
+                                        .Concat(GetArgInfo(argsCount)));
         }
 
         private static IEnumerable<CSharpArgumentInfo> GetArgInfo(int count)
