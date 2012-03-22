@@ -239,6 +239,11 @@ Here's some general notes about the syntax:
 		</tr>
 	</tbody>
 </table>
+**List of global functions**
+Most of the global functions are simple relays for static methods on System.Math, System.Linq.Enumerable and System.String
+
+//TODO
+
 
 **Chaining and nesting**
 Almost all expression can be chained or nested.
