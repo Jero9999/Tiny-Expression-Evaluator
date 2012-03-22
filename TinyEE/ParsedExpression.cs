@@ -34,7 +34,7 @@ namespace TinyEE
         private IEnumerable<string> _variables;
         public IEnumerable<string> Variables
         {
-            get { return _variables ?? (_variables = GetVariableNamesRecursive(ParseTree)); }
+            get { return _variables ?? (_variables = GetVariableNamesRecursive(ParseTree).Distinct()); }
         }
 
         internal Expression<Func<Func<string, object>, object>> SyntaxTree
@@ -87,9 +87,11 @@ namespace TinyEE
             }
         }
 
+        private static readonly Lazy<Parser> ParserInit = new Lazy<Parser>(()=>new Parser(new Scanner()), true);
+
         private static ParseTree ParseInternal(string expression)
         {
-            var parseTree = new Parser(new Scanner()).Parse(expression);
+            var parseTree = ParserInit.Value.Parse(expression);
             if (parseTree.Errors.Count > 0)
             {
                 var error = new ArgumentException("Syntax error");

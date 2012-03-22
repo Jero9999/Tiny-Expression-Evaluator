@@ -16,30 +16,30 @@ namespace TinyEE
         internal static Expression GetAST(this ParseNode node, Expression context)
         {
             Expression result;
-            var childNodes = node.Nodes.ToArray();
+            var childNodes = node.Nodes;
             switch (node.Token.Type)
             {
                 case TokenType.OrExpression:
                 case TokenType.AndExpression:
                 case TokenType.Addition:
                 case TokenType.Multiplication:
-                    result = childNodes.Length >= 3
-                                 ? GetBinaryAST(childNodes, childNodes.Length - 1, context)
+                    result = childNodes.Count >= 3
+                                 ? GetBinaryAST(childNodes, childNodes.Count - 1, context)
                                  : GetInnerAST(childNodes, context);
                     break;
                 case TokenType.Power:
-                    result = childNodes.Length >= 3
-                                 ? GetPowerAST(childNodes, childNodes.Length - 1, context)
+                    result = childNodes.Count >= 3
+                                 ? GetPowerAST(childNodes, childNodes.Count - 1, context)
                                  : GetInnerAST(childNodes, context);
                     break;
                 case TokenType.Compare:
-                    result = childNodes.Length >= 3
-                                 ? GetCompareAST(childNodes, childNodes.Length - 1, context)
+                    result = childNodes.Count >= 3
+                                 ? GetCompareAST(childNodes, childNodes.Count - 1, context)
                                  : GetInnerAST(childNodes, context);
                     break;
                 case TokenType.Negation:
                 case TokenType.NotExpression:
-                    result = childNodes.Length == 2
+                    result = childNodes.Count == 2
                                  ? GetUnaryAST(node, childNodes[1], context)
                                  : GetInnerAST(childNodes, context);
                     break;
@@ -51,7 +51,7 @@ namespace TinyEE
                     result = GetInnerAST(childNodes, context);
                     break;
                 case TokenType.Group:
-                    Debug.Assert(childNodes.Length == 3);
+                    Debug.Assert(childNodes.Count == 3);
                     result = childNodes[1].GetAST(context);
                     break;
                 case TokenType.Variable:
@@ -59,13 +59,13 @@ namespace TinyEE
                     result = GetVariableAST(variableName, context);
                     break;
                 case TokenType.MethodCall:
-                    result = childNodes.Length == 4
+                    result = childNodes.Count == 4
                                  ? GetMethodAST(childNodes, context)
                                  : GetInnerAST(childNodes, context);
                     break;
                 case TokenType.Member:
-                    result = childNodes.Length >= 3
-                                 ? GetMemberExpression(childNodes, childNodes.Length - 1, context)
+                    result = childNodes.Count >= 3
+                                 ? GetMemberExpression(childNodes, childNodes.Count - 1, context)
                                  : GetInnerAST(childNodes, context);
                     break;
                 case TokenType.FunctionCall:
@@ -82,7 +82,7 @@ namespace TinyEE
                 case TokenType.STRING:
                     var nodeText = node.Token.Text;
                     Debug.Assert(nodeText.Length >= 2 && nodeText.StartsWith("\"") && nodeText.EndsWith("\""));
-                    nodeText = nodeText.Substring(1, nodeText.Length - 2);
+                    nodeText = nodeText.Substring(1, nodeText.Length - 2).Replace("\\\"", "\"");
                     result = Expression.Constant(nodeText);
                     break;
                 case TokenType.TRUE:
@@ -104,20 +104,20 @@ namespace TinyEE
         }
 
         #region Get specific expressions
-        private static Expression GetInnerAST(ParseNode[] childNodes, Expression context)
+        private static Expression GetInnerAST(IList<ParseNode> childNodes, Expression context)
         {
-            if (childNodes.Length == 0)
+            if (childNodes.Count == 0)
             {
                 throw new InvalidOperationException("Invalid syntax");
             }
             return childNodes[0].GetAST(context);
         }
 
-        private static Expression GetBinaryAST(ParseNode[] nodes, int start, Expression context)
+        private static Expression GetBinaryAST(IList<ParseNode> nodes, int start, Expression context)
         {
             //chain from left to right
             //2 + 3 + 4 is calculated as (2+3)+4
-            Debug.Assert(nodes.Length >= 3 && nodes.Length % 2 == 1);
+            Debug.Assert(nodes.Count >= 3 && nodes.Count % 2 == 1);
             return start == 0
                        ? nodes[start].GetAST(context)
                        : Expression.Dynamic(DLRUtil.GetBinaryBinder(nodes[start - 1].Token.Type),
@@ -126,11 +126,11 @@ namespace TinyEE
                                             nodes[start].GetAST(context));
         }
 
-        private static Expression GetCompareAST(ParseNode[] nodes, int start, Expression context, Expression chain = null)
+        private static Expression GetCompareAST(IList<ParseNode> nodes, int start, Expression context, Expression chain = null)
         {
             //Rewrite chained compare expressions to chained AND expressions, e.g. 5>4>3> --> 5>4 AND 4>3
 
-            Debug.Assert(nodes.Length >= 3 && nodes.Length % 2 == 1);
+            Debug.Assert(nodes.Count >= 3 && nodes.Count % 2 == 1);
             Expression result;
             if (start == 0)
             {
@@ -153,11 +153,11 @@ namespace TinyEE
             return result;
         }
 
-        private static Expression GetPowerAST(ParseNode[] nodes, int start, Expression context)
+        private static Expression GetPowerAST(IList<ParseNode> nodes, int start, Expression context)
         {
             //Have to rewrite power expressions to Math.Pow function calls because C# runtime does not support the ^ operator like VB
             //a^b^c is rewritten as Math.Pow(Math.Pow(a, b), c) and calculated as (a^b)^c 
-            Debug.Assert(nodes.Length >= 3 && nodes.Length % 2 == 1);
+            Debug.Assert(nodes.Count >= 3 && nodes.Count % 2 == 1);
             return start == 0
                        ? nodes[start].GetAST(context)
                        : Expression.Dynamic(DLRUtil.GetFunctionCallBinder("POW", 2),
@@ -175,9 +175,9 @@ namespace TinyEE
                                       target.GetAST(context));
         }
 
-        private static Expression GetMemberExpression(ParseNode[] nodes, int start, Expression context)
+        private static Expression GetMemberExpression(IList<ParseNode> nodes, int start, Expression context)
         {
-            Debug.Assert(nodes.Length >= 3 && nodes.Length % 2 == 1);
+            Debug.Assert(nodes.Count >= 3 && nodes.Count % 2 == 1);
             Expression result;
             if (start == 0)
             {
@@ -216,10 +216,10 @@ namespace TinyEE
             return result;
         }
 
-        private static Expression GetMethodAST(ParseNode[] nodes, Expression context)
+        private static Expression GetMethodAST(IList<ParseNode> nodes, Expression context)
         {
             //method calls are not chainable and can only be invoked on system variables (variables beginning with $)
-            Debug.Assert(nodes.Length == 4);
+            Debug.Assert(nodes.Count == 4);
             var varName = nodes[0].Token.Text + nodes[1].Nodes[0].Token.Text;
             var @var = GetVariableAST(varName, context);
             
@@ -231,11 +231,11 @@ namespace TinyEE
             return Expression.Dynamic(binder, typeof (object), new[] {@var}.Concat(argExprs));
         }
 
-        private static Expression GetFunctionAST(ParseNode[] childNodes, Expression context)
+        private static Expression GetFunctionAST(IList<ParseNode> childNodes, Expression context)
         {
             //restrict function calls to static functions defined on class Functions only
-            Debug.Assert(childNodes.Length == 3 || childNodes.Length == 2);
-            var argExprs = childNodes.Length == 3
+            Debug.Assert(childNodes.Count == 3 || childNodes.Count == 2);
+            var argExprs = childNodes.Count == 3
                             ? GetArgumentsAST(childNodes[1].Nodes.ToArray(), context)
                             : Enumerable.Empty<Expression>();
             return Expression.Dynamic(GetFunctionCallBinder(childNodes, argExprs.Count(), true),
@@ -255,7 +255,7 @@ namespace TinyEE
             return DLRUtil.GetFunctionCallBinder(funcName, argCount, isStatic);
         }
 
-        private static IEnumerable<Expression> GetArgumentsAST(ParseNode[] nodes, Expression context)
+        private static IEnumerable<Expression> GetArgumentsAST(IList<ParseNode> nodes, Expression context)
         {
             return nodes.Where(node => node.Token.Type != TokenType.COMMA)
                         .Select(n => GetAST(n, context));
