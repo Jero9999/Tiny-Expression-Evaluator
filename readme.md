@@ -174,6 +174,10 @@ Here's some general notes about the syntax:
 			<td>not x</td>
 		</tr>
 		<tr>
+			<td>Greater than</td>
+			<td>x > y</td>
+		</tr>
+		<tr>
 			<td>Greater than or Equal</td>
 			<td>x >= y</td>
 		</tr>
@@ -231,6 +235,7 @@ Here's some general notes about the syntax:
 		<tr>
 			<td>Grouping</td>
 			<td>(x + y) * z</td>
+                        <td></td>
 		</tr>
 	</tbody>
 </table>
@@ -239,15 +244,15 @@ Here's some general notes about the syntax:
 Almost all expression can be chained or nested.
 
 * Property and indexer:
-```csharp
+```
 table01A.Rows[3]["col3"]
 ```
 * Function call:
-```csharp
+```
 If(100>10, Sum(Max(1,2),Max(0,1),Max(-5,3)), Sum(Min(-2,-3),Min(1,2)))
 ```
 * Comparision:
-```csharp
+```
 x > y > z
 ```
 
@@ -255,12 +260,8 @@ x > y > z
 Expressions are evaluated from left to right. The expression 2^2^2^2, for example, is evaluated as ((2^2)^2)^2 == 256 (same as in C# and Excel, but differs from Mathematical convention)
 
 **Limitation**
-* The expression between the squared bracket of an indexer can only be a string or integer literal.
-	So this is valid: ```dataTable[0]["xyz"]``` 
-	while this is not: ```dataTable[x+1][ToUpper(x.Name)]```
-* Method Calls are not chainable and can only be invoked on special variables beginning with $.
- So this is good: ```$usr:ToString()```
- while this is not: ```x:GetType().Assembly:CreateInstance("dangerous-type")```
+The expression between the squared bracket of an indexer can only be a string or integer literal. So this is valid: ```dataTable[0]["xyz"]``` while this is not: ```dataTable[x+1][ToUpper(x.Name)]```.
+Method Calls are not chainable and can only be invoked on special variables beginning with $. So this is good: ```$usr:ToString()``` while this is not: ```x:GetType().Assembly:CreateInstance("dangerous-type")```.
 
 ##API Reference
 <table>
