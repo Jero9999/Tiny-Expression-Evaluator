@@ -1,5 +1,3 @@
-﻿#Tiny Expression Evaluator
-
 Tiny Expression Evaluator (or TinyEE) strives to be the simplest expression language for .NET, ever.
 
 Its main strengths are:
