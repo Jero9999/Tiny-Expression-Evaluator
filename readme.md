@@ -133,6 +133,22 @@ Here's some general notes about the syntax:
 			<td>Not Equal</td>
 			<td>x <> y</td>
 		</tr>
+		<tr>
+			<td>Greater than</td>
+			<td>x > y</td>
+		</tr>
+		<tr>
+			<td>Greater than or Equal</td>
+			<td>x >= y</td>
+		</tr>
+		<tr>
+			<td>Less than</td>
+			<td>x &lt; y</td>
+		</tr>
+		<tr>
+			<td>Less than or Equal</td>
+			<td>x &lt;= y</td>
+		</tr>
 	</tbody>
 </table>
 
@@ -156,22 +172,6 @@ Here's some general notes about the syntax:
 		<tr>
 			<td>NOT</td>
 			<td>not x</td>
-		</tr>
-		<tr>
-			<td>Greater than</td>
-			<td>x > y</td>
-		</tr>
-		<tr>
-			<td>Greater than or Equal</td>
-			<td>x >= y</td>
-		</tr>
-		<tr>
-			<td>Less than</td>
-			<td>x &lt; y</td>
-		</tr>
-		<tr>
-			<td>Less than or Equal</td>
-			<td>x &lt;= y</td>
 		</tr>
 	</tbody>
 </table>
