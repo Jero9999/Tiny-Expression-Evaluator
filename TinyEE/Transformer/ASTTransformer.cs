@@ -119,8 +119,8 @@ namespace TinyEE
                 lower = upper;
                 upper = tmp;
             }
-            var range = Enumerable.Range(lower, upper - lower).ToArray();
-            return Expression.Constant(range, typeof(int[]));
+            var range = new Range<int>(lower, upper, upper - lower + 1, x => x + 1);
+            return Expression.Constant(range, typeof(Range<int>));
         }
 
         private static Expression GetHashAST(List<ParseNode> children, Expression context)
