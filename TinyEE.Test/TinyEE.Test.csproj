@@ -45,9 +45,6 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <None Include="packages.config" />
-  </ItemGroup>
-  <ItemGroup>
     <ProjectReference Include="..\TinyEE\TinyEE.csproj">
       <Project>{97108732-7FA1-40AA-9448-B5A6784D219A}</Project>
       <Name>TinyEE</Name>
