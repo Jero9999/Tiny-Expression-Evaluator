@@ -2,10 +2,11 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
+using TinyEE.JavaScript;
 
 namespace TinyEE
 {
-    public struct ParsedExpression
+    public struct ParsedExpression<T>
     {
         internal ParsedExpression(string text)
         {
@@ -22,13 +23,7 @@ namespace TinyEE
         private readonly string _text;
         public string Text
         {
-            get { return _text ?? string.Empty; }
-        }
-
-        private ParseTree _parseTree;
-        internal ParseTree ParseTree
-        {
-            get { return _parseTree ?? (_parseTree = ParseInternal(Text)); }
+            get { return _text ?? String.Empty; }
         }
 
         private IEnumerable<string> _variables;
@@ -37,32 +32,51 @@ namespace TinyEE
             get { return _variables ?? (_variables = GetVariableNamesRecursive(ParseTree).Distinct()); }
         }
 
-        internal Expression<Func<Func<string, object>, object>> SyntaxTree
+        private ParseTree _parseTree;
+
+        internal ParseTree ParseTree
+        {
+            get { return _parseTree ?? (_parseTree = ParseInternal(Text)); }
+        }
+
+        internal Expression<Func<Func<string, object>, T>> SyntaxTree
         {
             get { return TransformInternal(ParseTree); }
-        } 
+        }
         #endregion
 
         #region Eval
-        public CompiledExpression Compile()
+        public CompiledExpression<T> Compile()
         {
-            return new CompiledExpression(SyntaxTree.Compile());
+            return new CompiledExpression<T>(SyntaxTree.Compile());
         }
 
-        public object Evaluate()
+        public T Evaluate()
         {
-            return Compile().Evaluate(ContextFunctor.ZeroVariable);
+            return Compile().Evaluate();
         }
 
-        public object Evaluate(object context)
+        public T Evaluate(object context)
         {
-            return Compile().Evaluate(ContextFunctor.GetForObject(context));
+            return Compile().Evaluate(context);
         }
 
-        public object Evaluate(Func<string, object> contextFunctor)
+        public T Evaluate(Func<string, object> contextFunctor)
         {
             return Compile().Evaluate(contextFunctor);
         }
+
+        /// <summary>
+        /// Translates the provided expression to Javascript.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        /// <param name="options">The options.</param>
+        /// <returns></returns>
+        public string TranslateToJs(JsTransformationOptions options = null)
+        {
+            return ParseTree.GetJsExpr(options ?? new JsTransformationOptions());
+        }
+
         #endregion
 
         #region Private
@@ -87,27 +101,23 @@ namespace TinyEE
             }
         }
 
-        private static readonly Lazy<Parser> ParserInit = new Lazy<Parser>(()=>new Parser(new Scanner()), true);
-
         private static ParseTree ParseInternal(string expression)
         {
-            var parseTree = ParserInit.Value.Parse(expression);
+            var parseTree = TEE.ParserInit.Value.Parse(expression);
             if (parseTree.Errors.Count > 0)
             {
-                var error = new ArgumentException("Syntax error");
-                error.Data["details"] = parseTree.Errors.ToList();
+                var error = new FormatException("Syntax error at" + parseTree.Errors.First().Position);
+                error.Data["syntax_error_details"] = parseTree.Errors.ToArray();
                 throw error;
             }
             return parseTree;
         }
 
-        private static Expression<Func<Func<string, object>, object>> TransformInternal(ParseNode parseTree)
+        private static Expression<Func<Func<string, object>, T>> TransformInternal(ParseNode parseTree)
         {
             var contextExpr = Expression.Parameter(typeof(Func<string, object>), "context");
             var expressionTree = parseTree.GetAST(contextExpr);
-            return Expression.Lambda<Func<Func<string, object>, object>>(
-                Expression.TypeAs(expressionTree, typeof(object)),
-                contextExpr);
+            return Expression.Lambda<Func<Func<string, object>, T>>(Expression.Convert(expressionTree, typeof (T)), contextExpr);
         }
         #endregion
 
@@ -125,11 +135,11 @@ namespace TinyEE
         public override bool Equals(object obj)
         {
             if (ReferenceEquals(null, obj)) return false;
-            if (obj.GetType() != typeof(ParsedExpression)) return false;
-            return Equals((ParsedExpression)obj);
+            if (obj.GetType() != typeof(ParsedExpression<T>)) return false;
+            return Equals((ParsedExpression<T>)obj);
         }
 
-        public bool Equals(ParsedExpression other)
+        public bool Equals(ParsedExpression<T> other)
         {
             return Equals(other.Text, Text);
         }

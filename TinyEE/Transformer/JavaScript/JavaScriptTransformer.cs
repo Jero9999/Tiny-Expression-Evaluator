@@ -4,6 +4,7 @@ using System.Linq;
 
 namespace TinyEE.JavaScript
 {
+    //TODO:the js transformer is lagging behind in grammar
     internal static class JavaScriptTransformer
     {
         internal static string GetJsExpr(this ParseNode node, JsTransformationOptions options)
@@ -72,11 +73,11 @@ namespace TinyEE.JavaScript
                                  ? GetMemberJsExpr(childNodes, childNodes.Length - 1, options)
                                  : GetInnerJsExpr(childNodes, options);
                     break;
-                case TokenType.MethodCall:
-                    result = childNodes.Length == 4
-                                ? GetMethodCallJsExpr(childNodes, options)
-                                : GetInnerJsExpr(childNodes, options);
-                    break;
+                //case TokenType.MethodCall:
+                //    result = childNodes.Length == 4
+                //                ? GetMethodCallJsExpr(childNodes, options)
+                //                : GetInnerJsExpr(childNodes, options);
+                //    break;
                 case TokenType.FunctionCall:
                     result = GetFunctionJsExpr(childNodes, true, options);
                     break;
@@ -229,6 +230,7 @@ namespace TinyEE.JavaScript
                 case TokenType.MINUS: return "-";
                 case TokenType.STAR: return "*";
                 case TokenType.FSLASH: return "/";
+                case TokenType.MODULO: return "%";
                 case TokenType.EQUAL: return "===";
                 case TokenType.LT: return "<";
                 case TokenType.GT: return ">";

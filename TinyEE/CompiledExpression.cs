@@ -2,27 +2,31 @@
 
 namespace TinyEE
 {
-    public struct CompiledExpression
+    public struct CompiledExpression<T>
     {
-        private readonly Func<Func<string, object>, object> _compiledExpr;
+        private readonly Func<Func<string, object>, T> _compiledExpr;
 
-        internal CompiledExpression(Func<Func<string, object>, object> compiledExpression)
+        internal CompiledExpression(Func<Func<string, object>, T> compiledExpression)
         {
             _compiledExpr = compiledExpression;
         }
 
-        public object Evaluate()
+        public T Evaluate()
         {
             return _compiledExpr.Invoke(ContextFunctor.ZeroVariable);
         }
 
-        public object Evaluate(object context)
+        public T Evaluate(object context)
         {
             return _compiledExpr.Invoke(ContextFunctor.GetForObject(context));
         }
 
-        public object Evaluate(Func<string, object> contextFunctor)
+        public T Evaluate(Func<string, object> contextFunctor)
         {
+            if(contextFunctor == null)
+            {
+                throw new ArgumentNullException("contextFunctor");
+            }
             return _compiledExpr.Invoke(contextFunctor);
         }
     }

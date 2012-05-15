@@ -14,9 +14,9 @@ namespace TinyEE
         /// </summary>
         /// <param name="expression">The expression string.</param>
         /// <returns></returns>
-        public static object Evaluate(string expression)
+        public static T Evaluate<T>(string expression)
         {
-            return new ParsedExpression(expression).Evaluate();
+            return new ParsedExpression<T>(expression).Evaluate();
         }
 
         /// <summary>
@@ -27,20 +27,21 @@ namespace TinyEE
         /// <param name="expression">The expression string.</param>
         /// <param name="context">The context object.</param>
         /// <returns></returns>
-        public static object Evaluate(string expression, object context)
+        public static T Evaluate<T>(string expression, object context)
         {
-            return new ParsedExpression(expression).Evaluate(context);
+            return new ParsedExpression<T>(expression).Evaluate(context);
         }
 
         /// <summary>
         /// Evaluates the specified expression.
         /// </summary>
+        /// <typeparam name="T"></typeparam>
         /// <param name="expression">The expression.</param>
         /// <param name="getVar">The get var.</param>
         /// <returns></returns>
-        public static object Evaluate(string expression, Func<string, object> getVar)
+        public static T Evaluate<T>(string expression, Func<string, object> getVar)
         {
-            return new ParsedExpression(expression).Evaluate(getVar);
+            return new ParsedExpression<T>(expression).Evaluate(getVar);
         }
 
         /// <summary>
@@ -48,9 +49,9 @@ namespace TinyEE
         /// </summary>
         /// <param name="expression">The expression.</param>
         /// <returns></returns>
-        public static ParsedExpression Parse(string expression)
+        public static ParsedExpression<T> Parse<T>(string expression)
         {
-            return new ParsedExpression(expression);
+            return new ParsedExpression<T>(expression);
         }
 
         /// <summary>
@@ -58,15 +59,31 @@ namespace TinyEE
         /// </summary>
         /// <param name="expression">The expression.</param>
         /// <returns></returns>
-        public static CompiledExpression Compile(string expression)
+        public static CompiledExpression<T> Compile<T>(string expression)
         {
-            return new ParsedExpression(expression).Compile();
+            return new ParsedExpression<T>(expression).Compile();
         }
 
+        /// <summary>
+        /// Returns a wrapper that convert instance method calls to static ones
+        /// </summary>
+        /// <returns></returns>
+        public static dynamic Functions<T>()
+        {
+            return new FunctionsWrapper(typeof(T));
+        }
+
+        /// <summary>
+        /// Gets the variables.
+        /// </summary>
+        /// <param name="expression">The expression.</param>
+        /// <returns></returns>
         public static IEnumerable<string> GetVariables(string expression)
         {
-            return new ParsedExpression(expression).Variables;
+            return new ParsedExpression<object>(expression).Variables;
         }
         #endregion
+
+        internal static readonly Lazy<Parser> ParserInit = new Lazy<Parser>(() => new Parser(new Scanner()), true);
     }
 }

@@ -7,7 +7,7 @@ namespace TinyEE
 {
     #region Parser
 
-    internal partial class Parser 
+    public partial class Parser 
     {
         private Scanner scanner;
         private ParseTree tree;
@@ -43,10 +43,12 @@ namespace TinyEE
 
 
             
-            tok = scanner.LookAhead(TokenType.NOT, TokenType.MINUS, TokenType.STRING, TokenType.DECIMAL, TokenType.INTEGER, TokenType.TRUE, TokenType.FALSE, TokenType.NULL, TokenType.LPAREN, TokenType.FUNCTION, TokenType.IDENTIFIER, TokenType.DOLLAR);
+            tok = scanner.LookAhead(TokenType.NOT, TokenType.MINUS, TokenType.STRING, TokenType.RANGE, TokenType.DATETIME, TokenType.DECIMAL, TokenType.INTEGER, TokenType.TRUE, TokenType.FALSE, TokenType.NULL, TokenType.LPAREN, TokenType.FUNCTION, TokenType.IDENTIFIER, TokenType.LBRACKET, TokenType.LBRACE);
             if (tok.Type == TokenType.NOT
                 || tok.Type == TokenType.MINUS
                 || tok.Type == TokenType.STRING
+                || tok.Type == TokenType.RANGE
+                || tok.Type == TokenType.DATETIME
                 || tok.Type == TokenType.DECIMAL
                 || tok.Type == TokenType.INTEGER
                 || tok.Type == TokenType.TRUE
@@ -55,7 +57,8 @@ namespace TinyEE
                 || tok.Type == TokenType.LPAREN
                 || tok.Type == TokenType.FUNCTION
                 || tok.Type == TokenType.IDENTIFIER
-                || tok.Type == TokenType.DOLLAR)
+                || tok.Type == TokenType.LBRACKET
+                || tok.Type == TokenType.LBRACE)
             {
                 ParseExpression(node);
             }
@@ -345,13 +348,14 @@ namespace TinyEE
             ParsePower(node);
 
             
-            tok = scanner.LookAhead(TokenType.STAR, TokenType.FSLASH);
+            tok = scanner.LookAhead(TokenType.STAR, TokenType.FSLASH, TokenType.MODULO);
             while (tok.Type == TokenType.STAR
-                || tok.Type == TokenType.FSLASH)
+                || tok.Type == TokenType.FSLASH
+                || tok.Type == TokenType.MODULO)
             {
 
                 
-                tok = scanner.LookAhead(TokenType.STAR, TokenType.FSLASH);
+                tok = scanner.LookAhead(TokenType.STAR, TokenType.FSLASH, TokenType.MODULO);
                 switch (tok.Type)
                 {
                     case TokenType.STAR:
@@ -374,6 +378,16 @@ namespace TinyEE
                             return;
                         }
                         break;
+                    case TokenType.MODULO:
+                        tok = scanner.Scan(TokenType.MODULO);
+                        n = node.CreateNode(tok, tok.ToString() );
+                        node.Token.UpdateRange(tok);
+                        node.Nodes.Add(n);
+                        if (tok.Type != TokenType.MODULO) {
+                            tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found. Expected " + TokenType.MODULO.ToString(), 0x1001, 0, tok.StartPos, tok.StartPos, tok.Length));
+                            return;
+                        }
+                        break;
                     default:
                         tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found.", 0x0002, 0, tok.StartPos, tok.StartPos, tok.Length));
                         break;
@@ -381,7 +395,7 @@ namespace TinyEE
 
                 
                 ParsePower(node);
-            tok = scanner.LookAhead(TokenType.STAR, TokenType.FSLASH);
+            tok = scanner.LookAhead(TokenType.STAR, TokenType.FSLASH, TokenType.MODULO);
             }
 
             parent.Token.UpdateRange(node.Token);
@@ -444,64 +458,7 @@ namespace TinyEE
             }
 
             
-            tok = scanner.LookAhead(TokenType.STRING, TokenType.DECIMAL, TokenType.INTEGER, TokenType.TRUE, TokenType.FALSE, TokenType.NULL, TokenType.LPAREN, TokenType.FUNCTION, TokenType.IDENTIFIER, TokenType.DOLLAR);
-            switch (tok.Type)
-            {
-                case TokenType.STRING:
-                case TokenType.DECIMAL:
-                case TokenType.INTEGER:
-                case TokenType.TRUE:
-                case TokenType.FALSE:
-                case TokenType.NULL:
-                case TokenType.LPAREN:
-                case TokenType.FUNCTION:
-                case TokenType.IDENTIFIER:
-                    ParseMember(node);
-                    break;
-                case TokenType.DOLLAR:
-                    ParseMethodCall(node);
-                    break;
-                default:
-                    tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found.", 0x0002, 0, tok.StartPos, tok.StartPos, tok.Length));
-                    break;
-            }
-
-            parent.Token.UpdateRange(node.Token);
-        }
-
-        private void ParseMethodCall(ParseNode parent)
-        {
-            Token tok;
-            ParseNode n;
-            ParseNode node = parent.CreateNode(scanner.GetToken(TokenType.MethodCall), "MethodCall");
-            parent.Nodes.Add(node);
-
-
-            
-            tok = scanner.Scan(TokenType.DOLLAR);
-            n = node.CreateNode(tok, tok.ToString() );
-            node.Token.UpdateRange(tok);
-            node.Nodes.Add(n);
-            if (tok.Type != TokenType.DOLLAR) {
-                tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found. Expected " + TokenType.DOLLAR.ToString(), 0x1001, 0, tok.StartPos, tok.StartPos, tok.Length));
-                return;
-            }
-
-            
-            ParseVariable(node);
-
-            
-            tok = scanner.Scan(TokenType.COLON);
-            n = node.CreateNode(tok, tok.ToString() );
-            node.Token.UpdateRange(tok);
-            node.Nodes.Add(n);
-            if (tok.Type != TokenType.COLON) {
-                tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found. Expected " + TokenType.COLON.ToString(), 0x1001, 0, tok.StartPos, tok.StartPos, tok.Length));
-                return;
-            }
-
-            
-            ParseFunctionCall(node);
+            ParseMember(node);
 
             parent.Token.UpdateRange(node.Token);
         }
@@ -572,13 +529,25 @@ namespace TinyEE
             ParseNode node = parent.CreateNode(scanner.GetToken(TokenType.MemberAccess), "MemberAccess");
             parent.Nodes.Add(node);
 
-            tok = scanner.Scan(TokenType.IDENTIFIER);
-            n = node.CreateNode(tok, tok.ToString() );
-            node.Token.UpdateRange(tok);
-            node.Nodes.Add(n);
-            if (tok.Type != TokenType.IDENTIFIER) {
-                tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found. Expected " + TokenType.IDENTIFIER.ToString(), 0x1001, 0, tok.StartPos, tok.StartPos, tok.Length));
-                return;
+            tok = scanner.LookAhead(TokenType.IDENTIFIER, TokenType.FUNCTION);
+            switch (tok.Type)
+            {
+                case TokenType.IDENTIFIER:
+                    tok = scanner.Scan(TokenType.IDENTIFIER);
+                    n = node.CreateNode(tok, tok.ToString() );
+                    node.Token.UpdateRange(tok);
+                    node.Nodes.Add(n);
+                    if (tok.Type != TokenType.IDENTIFIER) {
+                        tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found. Expected " + TokenType.IDENTIFIER.ToString(), 0x1001, 0, tok.StartPos, tok.StartPos, tok.Length));
+                        return;
+                    }
+                    break;
+                case TokenType.FUNCTION:
+                    ParseFunctionCall(node);
+                    break;
+                default:
+                    tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found.", 0x0002, 0, tok.StartPos, tok.StartPos, tok.Length));
+                    break;
             }
 
             parent.Token.UpdateRange(node.Token);
@@ -591,10 +560,12 @@ namespace TinyEE
             ParseNode node = parent.CreateNode(scanner.GetToken(TokenType.Base), "Base");
             parent.Nodes.Add(node);
 
-            tok = scanner.LookAhead(TokenType.STRING, TokenType.DECIMAL, TokenType.INTEGER, TokenType.TRUE, TokenType.FALSE, TokenType.NULL, TokenType.LPAREN, TokenType.FUNCTION, TokenType.IDENTIFIER);
+            tok = scanner.LookAhead(TokenType.STRING, TokenType.RANGE, TokenType.DATETIME, TokenType.DECIMAL, TokenType.INTEGER, TokenType.TRUE, TokenType.FALSE, TokenType.NULL, TokenType.LPAREN, TokenType.FUNCTION, TokenType.IDENTIFIER, TokenType.LBRACKET, TokenType.LBRACE);
             switch (tok.Type)
             {
                 case TokenType.STRING:
+                case TokenType.RANGE:
+                case TokenType.DATETIME:
                 case TokenType.DECIMAL:
                 case TokenType.INTEGER:
                 case TokenType.TRUE:
@@ -611,10 +582,174 @@ namespace TinyEE
                 case TokenType.IDENTIFIER:
                     ParseVariable(node);
                     break;
+                case TokenType.LBRACKET:
+                    ParseListLiteral(node);
+                    break;
+                case TokenType.LBRACE:
+                    ParseHashLiteral(node);
+                    break;
                 default:
                     tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found.", 0x0002, 0, tok.StartPos, tok.StartPos, tok.Length));
                     break;
             }
+
+            parent.Token.UpdateRange(node.Token);
+        }
+
+        private void ParseListLiteral(ParseNode parent)
+        {
+            Token tok;
+            ParseNode n;
+            ParseNode node = parent.CreateNode(scanner.GetToken(TokenType.ListLiteral), "ListLiteral");
+            parent.Nodes.Add(node);
+
+
+            
+            tok = scanner.Scan(TokenType.LBRACKET);
+            n = node.CreateNode(tok, tok.ToString() );
+            node.Token.UpdateRange(tok);
+            node.Nodes.Add(n);
+            if (tok.Type != TokenType.LBRACKET) {
+                tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found. Expected " + TokenType.LBRACKET.ToString(), 0x1001, 0, tok.StartPos, tok.StartPos, tok.Length));
+                return;
+            }
+
+            
+            tok = scanner.LookAhead(TokenType.NOT, TokenType.MINUS, TokenType.STRING, TokenType.RANGE, TokenType.DATETIME, TokenType.DECIMAL, TokenType.INTEGER, TokenType.TRUE, TokenType.FALSE, TokenType.NULL, TokenType.LPAREN, TokenType.FUNCTION, TokenType.IDENTIFIER, TokenType.LBRACKET, TokenType.LBRACE);
+            if (tok.Type == TokenType.NOT
+                || tok.Type == TokenType.MINUS
+                || tok.Type == TokenType.STRING
+                || tok.Type == TokenType.RANGE
+                || tok.Type == TokenType.DATETIME
+                || tok.Type == TokenType.DECIMAL
+                || tok.Type == TokenType.INTEGER
+                || tok.Type == TokenType.TRUE
+                || tok.Type == TokenType.FALSE
+                || tok.Type == TokenType.NULL
+                || tok.Type == TokenType.LPAREN
+                || tok.Type == TokenType.FUNCTION
+                || tok.Type == TokenType.IDENTIFIER
+                || tok.Type == TokenType.LBRACKET
+                || tok.Type == TokenType.LBRACE)
+            {
+                ParseArgumentList(node);
+            }
+
+            
+            tok = scanner.Scan(TokenType.RBRACKET);
+            n = node.CreateNode(tok, tok.ToString() );
+            node.Token.UpdateRange(tok);
+            node.Nodes.Add(n);
+            if (tok.Type != TokenType.RBRACKET) {
+                tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found. Expected " + TokenType.RBRACKET.ToString(), 0x1001, 0, tok.StartPos, tok.StartPos, tok.Length));
+                return;
+            }
+
+            parent.Token.UpdateRange(node.Token);
+        }
+
+        private void ParseHashLiteral(ParseNode parent)
+        {
+            Token tok;
+            ParseNode n;
+            ParseNode node = parent.CreateNode(scanner.GetToken(TokenType.HashLiteral), "HashLiteral");
+            parent.Nodes.Add(node);
+
+
+            
+            tok = scanner.Scan(TokenType.LBRACE);
+            n = node.CreateNode(tok, tok.ToString() );
+            node.Token.UpdateRange(tok);
+            node.Nodes.Add(n);
+            if (tok.Type != TokenType.LBRACE) {
+                tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found. Expected " + TokenType.LBRACE.ToString(), 0x1001, 0, tok.StartPos, tok.StartPos, tok.Length));
+                return;
+            }
+
+            
+            tok = scanner.LookAhead(TokenType.STRING);
+            if (tok.Type == TokenType.STRING)
+            {
+                ParsePairList(node);
+            }
+
+            
+            tok = scanner.Scan(TokenType.RBRACE);
+            n = node.CreateNode(tok, tok.ToString() );
+            node.Token.UpdateRange(tok);
+            node.Nodes.Add(n);
+            if (tok.Type != TokenType.RBRACE) {
+                tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found. Expected " + TokenType.RBRACE.ToString(), 0x1001, 0, tok.StartPos, tok.StartPos, tok.Length));
+                return;
+            }
+
+            parent.Token.UpdateRange(node.Token);
+        }
+
+        private void ParsePairList(ParseNode parent)
+        {
+            Token tok;
+            ParseNode n;
+            ParseNode node = parent.CreateNode(scanner.GetToken(TokenType.PairList), "PairList");
+            parent.Nodes.Add(node);
+
+
+            
+            ParsePair(node);
+
+            
+            tok = scanner.LookAhead(TokenType.COMMA);
+            while (tok.Type == TokenType.COMMA)
+            {
+
+                
+                tok = scanner.Scan(TokenType.COMMA);
+                n = node.CreateNode(tok, tok.ToString() );
+                node.Token.UpdateRange(tok);
+                node.Nodes.Add(n);
+                if (tok.Type != TokenType.COMMA) {
+                    tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found. Expected " + TokenType.COMMA.ToString(), 0x1001, 0, tok.StartPos, tok.StartPos, tok.Length));
+                    return;
+                }
+
+                
+                ParsePair(node);
+            tok = scanner.LookAhead(TokenType.COMMA);
+            }
+
+            parent.Token.UpdateRange(node.Token);
+        }
+
+        private void ParsePair(ParseNode parent)
+        {
+            Token tok;
+            ParseNode n;
+            ParseNode node = parent.CreateNode(scanner.GetToken(TokenType.Pair), "Pair");
+            parent.Nodes.Add(node);
+
+
+            
+            tok = scanner.Scan(TokenType.STRING);
+            n = node.CreateNode(tok, tok.ToString() );
+            node.Token.UpdateRange(tok);
+            node.Nodes.Add(n);
+            if (tok.Type != TokenType.STRING) {
+                tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found. Expected " + TokenType.STRING.ToString(), 0x1001, 0, tok.StartPos, tok.StartPos, tok.Length));
+                return;
+            }
+
+            
+            tok = scanner.Scan(TokenType.COLON);
+            n = node.CreateNode(tok, tok.ToString() );
+            node.Token.UpdateRange(tok);
+            node.Nodes.Add(n);
+            if (tok.Type != TokenType.COLON) {
+                tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found. Expected " + TokenType.COLON.ToString(), 0x1001, 0, tok.StartPos, tok.StartPos, tok.Length));
+                return;
+            }
+
+            
+            ParseExpression(node);
 
             parent.Token.UpdateRange(node.Token);
         }
@@ -647,33 +782,7 @@ namespace TinyEE
 
 
             
-            tok = scanner.LookAhead(TokenType.STRING, TokenType.INTEGER);
-            switch (tok.Type)
-            {
-                case TokenType.STRING:
-                    tok = scanner.Scan(TokenType.STRING);
-                    n = node.CreateNode(tok, tok.ToString() );
-                    node.Token.UpdateRange(tok);
-                    node.Nodes.Add(n);
-                    if (tok.Type != TokenType.STRING) {
-                        tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found. Expected " + TokenType.STRING.ToString(), 0x1001, 0, tok.StartPos, tok.StartPos, tok.Length));
-                        return;
-                    }
-                    break;
-                case TokenType.INTEGER:
-                    tok = scanner.Scan(TokenType.INTEGER);
-                    n = node.CreateNode(tok, tok.ToString() );
-                    node.Token.UpdateRange(tok);
-                    node.Nodes.Add(n);
-                    if (tok.Type != TokenType.INTEGER) {
-                        tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found. Expected " + TokenType.INTEGER.ToString(), 0x1001, 0, tok.StartPos, tok.StartPos, tok.Length));
-                        return;
-                    }
-                    break;
-                default:
-                    tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found.", 0x0002, 0, tok.StartPos, tok.StartPos, tok.Length));
-                    break;
-            }
+            ParseExpression(node);
 
             
             tok = scanner.Scan(TokenType.RBRACKET);
@@ -707,10 +816,12 @@ namespace TinyEE
             }
 
             
-            tok = scanner.LookAhead(TokenType.NOT, TokenType.MINUS, TokenType.STRING, TokenType.DECIMAL, TokenType.INTEGER, TokenType.TRUE, TokenType.FALSE, TokenType.NULL, TokenType.LPAREN, TokenType.FUNCTION, TokenType.IDENTIFIER, TokenType.DOLLAR);
+            tok = scanner.LookAhead(TokenType.NOT, TokenType.MINUS, TokenType.STRING, TokenType.RANGE, TokenType.DATETIME, TokenType.DECIMAL, TokenType.INTEGER, TokenType.TRUE, TokenType.FALSE, TokenType.NULL, TokenType.LPAREN, TokenType.FUNCTION, TokenType.IDENTIFIER, TokenType.LBRACKET, TokenType.LBRACE);
             if (tok.Type == TokenType.NOT
                 || tok.Type == TokenType.MINUS
                 || tok.Type == TokenType.STRING
+                || tok.Type == TokenType.RANGE
+                || tok.Type == TokenType.DATETIME
                 || tok.Type == TokenType.DECIMAL
                 || tok.Type == TokenType.INTEGER
                 || tok.Type == TokenType.TRUE
@@ -719,7 +830,8 @@ namespace TinyEE
                 || tok.Type == TokenType.LPAREN
                 || tok.Type == TokenType.FUNCTION
                 || tok.Type == TokenType.IDENTIFIER
-                || tok.Type == TokenType.DOLLAR)
+                || tok.Type == TokenType.LBRACKET
+                || tok.Type == TokenType.LBRACE)
             {
                 ParseArgumentList(node);
             }
@@ -778,7 +890,7 @@ namespace TinyEE
             ParseNode node = parent.CreateNode(scanner.GetToken(TokenType.Literal), "Literal");
             parent.Nodes.Add(node);
 
-            tok = scanner.LookAhead(TokenType.STRING, TokenType.DECIMAL, TokenType.INTEGER, TokenType.TRUE, TokenType.FALSE, TokenType.NULL);
+            tok = scanner.LookAhead(TokenType.STRING, TokenType.RANGE, TokenType.DATETIME, TokenType.DECIMAL, TokenType.INTEGER, TokenType.TRUE, TokenType.FALSE, TokenType.NULL);
             switch (tok.Type)
             {
                 case TokenType.STRING:
@@ -788,6 +900,26 @@ namespace TinyEE
                     node.Nodes.Add(n);
                     if (tok.Type != TokenType.STRING) {
                         tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found. Expected " + TokenType.STRING.ToString(), 0x1001, 0, tok.StartPos, tok.StartPos, tok.Length));
+                        return;
+                    }
+                    break;
+                case TokenType.RANGE:
+                    tok = scanner.Scan(TokenType.RANGE);
+                    n = node.CreateNode(tok, tok.ToString() );
+                    node.Token.UpdateRange(tok);
+                    node.Nodes.Add(n);
+                    if (tok.Type != TokenType.RANGE) {
+                        tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found. Expected " + TokenType.RANGE.ToString(), 0x1001, 0, tok.StartPos, tok.StartPos, tok.Length));
+                        return;
+                    }
+                    break;
+                case TokenType.DATETIME:
+                    tok = scanner.Scan(TokenType.DATETIME);
+                    n = node.CreateNode(tok, tok.ToString() );
+                    node.Token.UpdateRange(tok);
+                    node.Nodes.Add(n);
+                    if (tok.Type != TokenType.DATETIME) {
+                        tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found. Expected " + TokenType.DATETIME.ToString(), 0x1001, 0, tok.StartPos, tok.StartPos, tok.Length));
                         return;
                     }
                     break;

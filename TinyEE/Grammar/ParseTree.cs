@@ -9,12 +9,12 @@ namespace TinyEE
 {
     #region ParseTree
     [Serializable]
-    internal class ParseErrors : List<ParseError>
+    public class ParseErrors : List<ParseError>
     {
     }
 
     [Serializable]
-    internal class ParseError
+    public class ParseError
     {
         private string message;
         private int code;
@@ -52,7 +52,7 @@ namespace TinyEE
 
     // rootlevel of the node tree
     [Serializable]
-    internal partial class ParseTree : ParseNode
+    public partial class ParseTree : ParseNode
     {
         public ParseErrors Errors;
 
@@ -98,7 +98,7 @@ namespace TinyEE
 
     [Serializable]
     [XmlInclude(typeof(ParseTree))]
-    internal partial class ParseNode
+    public partial class ParseNode
     {
         protected string text;
         protected List<ParseNode> nodes;
@@ -197,9 +197,6 @@ namespace TinyEE
                 case TokenType.Negation:
                     Value = EvalNegation(tree, paramlist);
                     break;
-                case TokenType.MethodCall:
-                    Value = EvalMethodCall(tree, paramlist);
-                    break;
                 case TokenType.Member:
                     Value = EvalMember(tree, paramlist);
                     break;
@@ -208,6 +205,18 @@ namespace TinyEE
                     break;
                 case TokenType.Base:
                     Value = EvalBase(tree, paramlist);
+                    break;
+                case TokenType.ListLiteral:
+                    Value = EvalListLiteral(tree, paramlist);
+                    break;
+                case TokenType.HashLiteral:
+                    Value = EvalHashLiteral(tree, paramlist);
+                    break;
+                case TokenType.PairList:
+                    Value = EvalPairList(tree, paramlist);
+                    break;
+                case TokenType.Pair:
+                    Value = EvalPair(tree, paramlist);
                     break;
                 case TokenType.Variable:
                     Value = EvalVariable(tree, paramlist);
@@ -285,11 +294,6 @@ namespace TinyEE
             throw new NotImplementedException();
         }
 
-        protected virtual object EvalMethodCall(ParseTree tree, params object[] paramlist)
-        {
-            throw new NotImplementedException();
-        }
-
         protected virtual object EvalMember(ParseTree tree, params object[] paramlist)
         {
             throw new NotImplementedException();
@@ -301,6 +305,26 @@ namespace TinyEE
         }
 
         protected virtual object EvalBase(ParseTree tree, params object[] paramlist)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected virtual object EvalListLiteral(ParseTree tree, params object[] paramlist)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected virtual object EvalHashLiteral(ParseTree tree, params object[] paramlist)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected virtual object EvalPairList(ParseTree tree, params object[] paramlist)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected virtual object EvalPair(ParseTree tree, params object[] paramlist)
         {
             throw new NotImplementedException();
         }

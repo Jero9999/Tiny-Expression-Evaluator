@@ -9,7 +9,7 @@ namespace TinyEE
 {
     #region Scanner
 
-    internal partial class Scanner
+    public partial class Scanner
     {
         public string Input;
         public int StartPos = 0;
@@ -55,6 +55,10 @@ namespace TinyEE
             Patterns.Add(TokenType.EXPONENT, regex);
             Tokens.Add(TokenType.EXPONENT);
 
+            regex = new Regex(@"\%", RegexOptions.Compiled);
+            Patterns.Add(TokenType.MODULO, regex);
+            Tokens.Add(TokenType.MODULO);
+
             regex = new Regex(@"\(", RegexOptions.Compiled);
             Patterns.Add(TokenType.LPAREN, regex);
             Tokens.Add(TokenType.LPAREN);
@@ -70,6 +74,14 @@ namespace TinyEE
             regex = new Regex(@"\]", RegexOptions.Compiled);
             Patterns.Add(TokenType.RBRACKET, regex);
             Tokens.Add(TokenType.RBRACKET);
+
+            regex = new Regex(@"\{", RegexOptions.Compiled);
+            Patterns.Add(TokenType.LBRACE, regex);
+            Tokens.Add(TokenType.LBRACE);
+
+            regex = new Regex(@"\}", RegexOptions.Compiled);
+            Patterns.Add(TokenType.RBRACE, regex);
+            Tokens.Add(TokenType.RBRACE);
 
             regex = new Regex(@"=", RegexOptions.Compiled);
             Patterns.Add(TokenType.EQUAL, regex);
@@ -111,6 +123,10 @@ namespace TinyEE
             Patterns.Add(TokenType.DOT, regex);
             Tokens.Add(TokenType.DOT);
 
+            regex = new Regex(@"\.\.", RegexOptions.Compiled);
+            Patterns.Add(TokenType.DOTDOT, regex);
+            Tokens.Add(TokenType.DOTDOT);
+
             regex = new Regex(@",", RegexOptions.Compiled);
             Patterns.Add(TokenType.COMMA, regex);
             Tokens.Add(TokenType.COMMA);
@@ -118,10 +134,6 @@ namespace TinyEE
             regex = new Regex(@":", RegexOptions.Compiled);
             Patterns.Add(TokenType.COLON, regex);
             Tokens.Add(TokenType.COLON);
-
-            regex = new Regex(@"\$", RegexOptions.Compiled);
-            Patterns.Add(TokenType.DOLLAR, regex);
-            Tokens.Add(TokenType.DOLLAR);
 
             regex = new Regex(@"^$", RegexOptions.Compiled);
             Patterns.Add(TokenType.EOF, regex);
@@ -147,15 +159,27 @@ namespace TinyEE
             Patterns.Add(TokenType.DECIMAL, regex);
             Tokens.Add(TokenType.DECIMAL);
 
+            regex = new Regex(@"[0-9]+\.\.[0-9]+", RegexOptions.Compiled);
+            Patterns.Add(TokenType.RANGE, regex);
+            Tokens.Add(TokenType.RANGE);
+
             regex = new Regex(@"""([^""\\]*(\\""[^""\\]*)*)""", RegexOptions.Compiled);
             Patterns.Add(TokenType.STRING, regex);
             Tokens.Add(TokenType.STRING);
 
-            regex = new Regex(@"[a-zA-Z_][a-zA-Z0-9_]*\(", RegexOptions.Compiled);
+            regex = new Regex(@"#[0-9]{4}-[0-1][0-9]-[1-3][0-9]T?([0-2][0-9]:[1-5][0-9]:[1-5][0-9])?#", RegexOptions.Compiled);
+            Patterns.Add(TokenType.DATETIME, regex);
+            Tokens.Add(TokenType.DATETIME);
+
+            regex = new Regex(@"#[0-2][0-9]:[1-5][0-9]:[1-5][0-9]#", RegexOptions.Compiled);
+            Patterns.Add(TokenType.DURATION, regex);
+            Tokens.Add(TokenType.DURATION);
+
+            regex = new Regex(@"[a-zA-Z][a-zA-Z0-9_]*\(", RegexOptions.Compiled);
             Patterns.Add(TokenType.FUNCTION, regex);
             Tokens.Add(TokenType.FUNCTION);
 
-            regex = new Regex(@"[a-zA-Z_][a-zA-Z0-9_]*", RegexOptions.Compiled);
+            regex = new Regex(@"[a-zA-Z_$][a-zA-Z0-9_$]*", RegexOptions.Compiled);
             Patterns.Add(TokenType.IDENTIFIER, regex);
             Tokens.Add(TokenType.IDENTIFIER);
 
@@ -279,7 +303,7 @@ namespace TinyEE
 
     #region Token
 
-    internal enum TokenType
+    public enum TokenType
     {
 
             //Non terminal tokens:
@@ -297,53 +321,62 @@ namespace TinyEE
             Multiplication= 9,
             Power   = 10,
             Negation= 11,
-            MethodCall= 12,
-            Member  = 13,
-            MemberAccess= 14,
-            Base    = 15,
-            Variable= 16,
-            IndexAccess= 17,
-            FunctionCall= 18,
-            ArgumentList= 19,
-            Literal = 20,
-            Group   = 21,
+            Member  = 12,
+            MemberAccess= 13,
+            Base    = 14,
+            ListLiteral= 15,
+            HashLiteral= 16,
+            PairList= 17,
+            Pair    = 18,
+            Variable= 19,
+            IndexAccess= 20,
+            FunctionCall= 21,
+            ArgumentList= 22,
+            Literal = 23,
+            Group   = 24,
 
             //Terminal tokens:
-            PLUS    = 22,
-            MINUS   = 23,
-            STAR    = 24,
-            FSLASH  = 25,
-            EXPONENT= 26,
-            LPAREN  = 27,
-            RPAREN  = 28,
-            LBRACKET= 29,
-            RBRACKET= 30,
-            EQUAL   = 31,
-            LT      = 32,
-            GT      = 33,
-            LTE     = 34,
-            GTE     = 35,
-            NOTEQUAL= 36,
-            AND     = 37,
-            OR      = 38,
-            NOT     = 39,
-            DOT     = 40,
-            COMMA   = 41,
-            COLON   = 42,
-            DOLLAR  = 43,
-            EOF     = 44,
-            TRUE    = 45,
-            FALSE   = 46,
-            NULL    = 47,
-            INTEGER = 48,
-            DECIMAL = 49,
-            STRING  = 50,
-            FUNCTION= 51,
-            IDENTIFIER= 52,
-            WS      = 53
+            PLUS    = 25,
+            MINUS   = 26,
+            STAR    = 27,
+            FSLASH  = 28,
+            EXPONENT= 29,
+            MODULO  = 30,
+            LPAREN  = 31,
+            RPAREN  = 32,
+            LBRACKET= 33,
+            RBRACKET= 34,
+            LBRACE  = 35,
+            RBRACE  = 36,
+            EQUAL   = 37,
+            LT      = 38,
+            GT      = 39,
+            LTE     = 40,
+            GTE     = 41,
+            NOTEQUAL= 42,
+            AND     = 43,
+            OR      = 44,
+            NOT     = 45,
+            DOT     = 46,
+            DOTDOT  = 47,
+            COMMA   = 48,
+            COLON   = 49,
+            EOF     = 50,
+            TRUE    = 51,
+            FALSE   = 52,
+            NULL    = 53,
+            INTEGER = 54,
+            DECIMAL = 55,
+            RANGE   = 56,
+            STRING  = 57,
+            DATETIME= 58,
+            DURATION= 59,
+            FUNCTION= 60,
+            IDENTIFIER= 61,
+            WS      = 62
     }
 
-    internal class Token
+    public class Token
     {
         private int startpos;
         private int endpos;

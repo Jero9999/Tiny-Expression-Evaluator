@@ -35,23 +35,24 @@
     <Reference Include="System" />
     <Reference Include="System.Core" />
     <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CompiledExpression.cs" />
+    <Compile Include="Grammar\Parser.cs" />
+    <Compile Include="Grammar\ParseTree.cs" />
+    <Compile Include="Grammar\Scanner.cs" />
     <Compile Include="ParsedExpression.cs" />
-    <Compile Include="Extension\StringExtension.cs" />
-    <Compile Include="Parser\Parser.cs" />
-    <Compile Include="Parser\ParseTree.cs" />
-    <Compile Include="Parser\Scanner.cs" />
     <Compile Include="Runtime\ContextFunctor.cs" />
+    <Compile Include="Runtime\Range.cs" />
     <Compile Include="Transformer\DLRUtil.cs" />
     <Compile Include="Runtime\Functions.cs" />
+    <Compile Include="Runtime\FunctionsWrapper.cs" />
     <Compile Include="Transformer\JavaScript\JavaScriptTransformer.cs" />
     <Compile Include="Transformer\ASTTransformer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tee.cs" />
-    <Compile Include="Transformer\JavaScript\JsExtension.cs" />
     <Compile Include="Transformer\JavaScript\JsTransformationOptions.cs" />
     <Compile Include="Transformer\JavaScript\VariableMode.cs" />
   </ItemGroup>

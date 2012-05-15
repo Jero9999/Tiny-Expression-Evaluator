@@ -4,6 +4,7 @@ using System.Linq;
 using System.Linq.Expressions;
 using System.Runtime.CompilerServices;
 using Microsoft.CSharp.RuntimeBinder;
+using Binder = Microsoft.CSharp.RuntimeBinder.Binder;
 
 namespace TinyEE
 {
@@ -43,7 +44,7 @@ namespace TinyEE
                                         .Concat(GetArgInfo(argsCount)));
         }
 
-        private static IEnumerable<CSharpArgumentInfo> GetArgInfo(int count)
+        internal static IEnumerable<CSharpArgumentInfo> GetArgInfo(int count)
         {
             return Enumerable.Repeat(CSharpArgumentInfo.Create(CSharpArgumentInfoFlags.None, null), count);
         }
@@ -57,6 +58,7 @@ namespace TinyEE
                 case TokenType.MINUS: return ExpressionType.Subtract;
                 case TokenType.STAR: return ExpressionType.Multiply;
                 case TokenType.FSLASH: return ExpressionType.Divide;
+                case TokenType.MODULO: return ExpressionType.Modulo;
                 case TokenType.EQUAL: return ExpressionType.Equal;
                 case TokenType.LT: return ExpressionType.LessThan;
                 case TokenType.GT: return ExpressionType.GreaterThan;
