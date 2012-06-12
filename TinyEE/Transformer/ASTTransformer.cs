@@ -119,8 +119,13 @@ namespace TinyEE
                 lower = upper;
                 upper = tmp;
             }
-            var range = new Range<int>(lower, upper, upper - lower + 1, x => x + 1);
+            var range = new Range<int>(lower, upper, x => x + 1, x => x - 1, (x, y) => x > y ? 0 : y - x + 1);
             return Expression.Constant(range, typeof(Range<int>));
+        }
+
+        private static int GetNumericRangeSize(int left, int right)
+        {
+            return left > right ? 0 : right - left + 1;
         }
 
         private static Expression GetHashAST(List<ParseNode> children, Expression context)

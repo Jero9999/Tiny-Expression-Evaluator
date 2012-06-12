@@ -80,31 +80,19 @@ namespace TinyEE
 
         public static Range<int> NUMBERS(int left, int right, int step = 1)
         {
-            return new Range<int>(left, right, right - left + 1, x => x + step);
+            return new Range<int>(left, right, x => x + 1, x => x - 1, (x, y) => x > y ? 0 : y - x + 1);
         }
 
         public static Range<DateTime> DATES(string leftStr, string rightStr)
         {
             DateTime left  = DateTime.Parse(leftStr),
                      right = DateTime.Parse(rightStr);
-            return new Range<DateTime>(left, right, (int)(right - left).TotalDays, x => x.AddDays(1));
+            return DATES(left, right);
         }
 
         public static Range<DateTime> DATES(DateTime left, DateTime right)
         {
-            return new Range<DateTime>(left, right, (int)(right - left).TotalDays, x => x.AddDays(1));
-        }
-
-        public static Range<TimeSpan> HOURS(TimeSpan left, TimeSpan right, int minutesPerStep = 60)
-        {
-            return new Range<TimeSpan>(left, right, (int)(right - left).TotalHours, x => x.Add(TimeSpan.FromMinutes(minutesPerStep)));
-        }
-
-        public static Range<TimeSpan> HOURS(string leftStr, string rightStr, int minutesPerStep = 60)
-        {
-            TimeSpan left  = TimeSpan.Parse(leftStr),
-                     right = TimeSpan.Parse(rightStr);
-            return new Range<TimeSpan>(left, right, (int)(right - left).TotalHours, x => x.Add(TimeSpan.FromMinutes(minutesPerStep)));
+            return new Range<DateTime>(left, right, x => x.AddDays(1), x => x.AddDays(-1), (x, y) => x.Date > y.Date ? 0 : (y.Date - x.Date).Days + 1);
         }
         #endregion
 
