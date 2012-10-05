@@ -102,6 +102,9 @@ namespace Formy.Evaluation.Test
         [TestCase("true and false", false)]
         [TestCase("true or false", true)]
         [TestCase("", null)]
+        [TestCase("true ? 1 : 0", 1)]
+        [TestCase("false ? 1 : 0", 0)]
+        [TestCase(@"null ?: ""hello""", "hello")]
         public void ShouldRunSingleExpression(string expr, object expected)
         {
             var actual = TEE.Evaluate<object>(expr, _context);
@@ -140,10 +143,8 @@ namespace Formy.Evaluation.Test
             Assert.AreEqual(expected, actual);
         }
 
-        [TestCase(@"""Hello""", "Hello")]
-        [TestCase(@"""A Review of \""A Tale of Two Cities\"" and \""Moby Dick\""""", "A Review of \"A Tale of Two Cities\" and \"Moby Dick\"")]
+        
         [TestCase(@"""Hello "" + ""world""", "Hello world")]
-        [TestCase(@"""사랑해""", "사랑해")]
         [TestCase(@"""Hello "" + 1", "Hello 1")]
         [TestCase(@"""Hello"" = ""Hello""", true)]
         [TestCase(@"""Hello"" = ""Goodbye""", false)]
@@ -166,6 +167,98 @@ namespace Formy.Evaluation.Test
         {
             var actual = TEE.Evaluate<object>(expr, _context);
             Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        [TestCase("null", null)]
+        [TestCase("false", false)]
+        [TestCase("FalSe", false)]
+        [TestCase("true", true)]
+        [TestCase("TruE", true)]
+        [TestCase("-2147483648", -2147483648)]
+        [TestCase("2147483647", 2147483647)]
+        [TestCase("-0", 0)]
+        [TestCase("+0", 0)]
+        [TestCase("-0.1234", -0.1234)]
+        [TestCase("+0.1234", 0.1234)]
+        [TestCase(@"""Hello""", "Hello")]
+        [TestCase(@"""A Review of \""A Tale of Two Cities\"" and \""Moby Dick\""""", "A Review of \"A Tale of Two Cities\" and \"Moby Dick\"")]
+        [TestCase(@"""사랑해""", "사랑해")]
+        public void ShouldRunPrimitiveLiteralExpressions(string expr, object expected)
+        {
+            var actual = TEE.Evaluate<object>(expr);
+            Assert.AreEqual(expected, actual);
+        }
+
+        [Test]
+        [TestCase("0..12", 0 , 12, 13)]
+        [TestCase("1..12", 1, 12, 12)]
+        public void ShouldRunRangeLiteralExpression(string range, int left, int right, int count)
+        {
+            var range1 = TEE.Evaluate<Range<int>>(range);
+            Assert.AreEqual(left, range1.Left);
+            Assert.AreEqual(right, range1.Right);
+            Assert.AreEqual(count, range1.Size);
+            var range2 = Range<int>.Numeric(left, right);
+            Assert.AreEqual(range1, range2);
+        }
+
+        [Test]
+        public void ShouldRunListLiteralExpression()
+        {
+            var list1 = TEE.Evaluate<object[]>("[1,2,3,4,5,6,7]");
+            Assert.IsNotNull(list1);
+            Assert.AreEqual(7, list1.Length);
+
+            var list2 = TEE.Evaluate<object[]>(@"[""adam"",""eve"",""cain"",""abel""]");
+            Assert.IsNotNull(list2);
+            Assert.AreEqual(4, list2.Length);
+
+            var list3 = TEE.Evaluate<object[]>("[true, false, true]");
+            Assert.IsNotNull(list3);
+            Assert.AreEqual(3, list3.Length);
+
+            var list4 = TEE.Evaluate<object[]>(@"[1, false, """"]");
+            Assert.IsNotNull(list4);
+            Assert.AreEqual(3, list4.Length);
+
+            var list5 = TEE.Evaluate<object[]>(@"[1, array01A, $usr]", _context);
+            Assert.IsNotNull(list5);
+            Assert.AreEqual(3, list5.Length);
+            Assert.AreEqual(typeof(int), list5[0].GetType());
+            Assert.AreEqual(typeof (int[]), list5[1].GetType());
+            Assert.AreEqual(typeof(Person), list5[2].GetType());
+        }
+
+        [Test]
+        public void ShouldRunHashLiteralExpression()
+        {
+            var dict1 = TEE.Evaluate<IDictionary<string, object>>(@"{ ""a"":1,""b"":2,""c"":3,""d"":$usr, ""e"":array01A }", _context);
+            Assert.IsNotNull(dict1);
+            Assert.AreEqual(5, dict1.Count);
+            CollectionAssert.AreEquivalent(new[]{"a","b","c","d","e"}, dict1.Keys);
+            Assert.AreEqual(typeof(int), dict1["a"].GetType());
+            Assert.AreEqual(typeof(int[]), dict1["e"].GetType());
+            Assert.AreEqual(typeof(Person), dict1["d"].GetType());
+        }
+
+        [Test]
+        [ExpectedException(typeof(OverflowException))]
+        [TestCase("-2147483649")]
+        [TestCase("2147483648")]
+        [TestCase("2147483647 + 1")]
+        [TestCase("-2147483648 - 1")]
+        public void ShouldOverflow(string expr)
+        {
+            var result = TEE.Evaluate<object>(expr);
+            Assert.Fail("Result:" + result);
+        }
+
+        [Test]
+        public void ShouldFail()
+        {
+            var result = TEE.Evaluate<object>("a+b");
+            Assert.Fail("Result:" + result);
         }
     }
 }

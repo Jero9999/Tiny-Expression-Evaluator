@@ -173,6 +173,12 @@ namespace TinyEE
                 case TokenType.Expression:
                     Value = EvalExpression(tree, paramlist);
                     break;
+                case TokenType.ConditionalExpression:
+                    Value = EvalConditionalExpression(tree, paramlist);
+                    break;
+                case TokenType.CoalesceExpression:
+                    Value = EvalCoalesceExpression(tree, paramlist);
+                    break;
                 case TokenType.OrExpression:
                     Value = EvalOrExpression(tree, paramlist);
                     break;
@@ -230,8 +236,8 @@ namespace TinyEE
                 case TokenType.ArgumentList:
                     Value = EvalArgumentList(tree, paramlist);
                     break;
-                case TokenType.Literal:
-                    Value = EvalLiteral(tree, paramlist);
+                case TokenType.PrimitiveLiteral:
+                    Value = EvalPrimitiveLiteral(tree, paramlist);
                     break;
                 case TokenType.Group:
                     Value = EvalGroup(tree, paramlist);
@@ -250,6 +256,16 @@ namespace TinyEE
         }
 
         protected virtual object EvalExpression(ParseTree tree, params object[] paramlist)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected virtual object EvalConditionalExpression(ParseTree tree, params object[] paramlist)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected virtual object EvalCoalesceExpression(ParseTree tree, params object[] paramlist)
         {
             throw new NotImplementedException();
         }
@@ -349,7 +365,7 @@ namespace TinyEE
             throw new NotImplementedException();
         }
 
-        protected virtual object EvalLiteral(ParseTree tree, params object[] paramlist)
+        protected virtual object EvalPrimitiveLiteral(ParseTree tree, params object[] paramlist)
         {
             throw new NotImplementedException();
         }

@@ -127,6 +127,14 @@ namespace TinyEE
             Patterns.Add(TokenType.DOTDOT, regex);
             Tokens.Add(TokenType.DOTDOT);
 
+            regex = new Regex(@"\?", RegexOptions.Compiled);
+            Patterns.Add(TokenType.QUIZ, regex);
+            Tokens.Add(TokenType.QUIZ);
+
+            regex = new Regex(@"\?:", RegexOptions.Compiled);
+            Patterns.Add(TokenType.QUIZCOLON, regex);
+            Tokens.Add(TokenType.QUIZCOLON);
+
             regex = new Regex(@",", RegexOptions.Compiled);
             Patterns.Add(TokenType.COMMA, regex);
             Tokens.Add(TokenType.COMMA);
@@ -160,20 +168,12 @@ namespace TinyEE
             Tokens.Add(TokenType.DECIMAL);
 
             regex = new Regex(@"[0-9]+\.\.[0-9]+", RegexOptions.Compiled);
-            Patterns.Add(TokenType.RANGE, regex);
-            Tokens.Add(TokenType.RANGE);
+            Patterns.Add(TokenType.INTRANGE, regex);
+            Tokens.Add(TokenType.INTRANGE);
 
             regex = new Regex(@"""([^""\\]*(\\""[^""\\]*)*)""", RegexOptions.Compiled);
             Patterns.Add(TokenType.STRING, regex);
             Tokens.Add(TokenType.STRING);
-
-            regex = new Regex(@"#[0-9]{4}-[0-1][0-9]-[1-3][0-9]T?([0-2][0-9]:[1-5][0-9]:[1-5][0-9])?#", RegexOptions.Compiled);
-            Patterns.Add(TokenType.DATETIME, regex);
-            Tokens.Add(TokenType.DATETIME);
-
-            regex = new Regex(@"#[0-2][0-9]:[1-5][0-9]:[1-5][0-9]#", RegexOptions.Compiled);
-            Patterns.Add(TokenType.DURATION, regex);
-            Tokens.Add(TokenType.DURATION);
 
             regex = new Regex(@"[a-zA-Z][a-zA-Z0-9_]*\(", RegexOptions.Compiled);
             Patterns.Add(TokenType.FUNCTION, regex);
@@ -313,67 +313,69 @@ namespace TinyEE
             //Non terminal tokens:
             Start   = 2,
             Expression= 3,
-            OrExpression= 4,
-            AndExpression= 5,
-            NotExpression= 6,
-            Compare = 7,
-            Addition= 8,
-            Multiplication= 9,
-            Power   = 10,
-            Negation= 11,
-            Member  = 12,
-            MemberAccess= 13,
-            Base    = 14,
-            ListLiteral= 15,
-            HashLiteral= 16,
-            PairList= 17,
-            Pair    = 18,
-            Variable= 19,
-            IndexAccess= 20,
-            FunctionCall= 21,
-            ArgumentList= 22,
-            Literal = 23,
-            Group   = 24,
+            ConditionalExpression= 4,
+            CoalesceExpression= 5,
+            OrExpression= 6,
+            AndExpression= 7,
+            NotExpression= 8,
+            Compare = 9,
+            Addition= 10,
+            Multiplication= 11,
+            Power   = 12,
+            Negation= 13,
+            Member  = 14,
+            MemberAccess= 15,
+            Base    = 16,
+            ListLiteral= 17,
+            HashLiteral= 18,
+            PairList= 19,
+            Pair    = 20,
+            Variable= 21,
+            IndexAccess= 22,
+            FunctionCall= 23,
+            ArgumentList= 24,
+            PrimitiveLiteral= 25,
+            Group   = 26,
 
             //Terminal tokens:
-            PLUS    = 25,
-            MINUS   = 26,
-            STAR    = 27,
-            FSLASH  = 28,
-            EXPONENT= 29,
-            MODULO  = 30,
-            LPAREN  = 31,
-            RPAREN  = 32,
-            LBRACKET= 33,
-            RBRACKET= 34,
-            LBRACE  = 35,
-            RBRACE  = 36,
-            EQUAL   = 37,
-            LT      = 38,
-            GT      = 39,
-            LTE     = 40,
-            GTE     = 41,
-            NOTEQUAL= 42,
-            AND     = 43,
-            OR      = 44,
-            NOT     = 45,
-            DOT     = 46,
-            DOTDOT  = 47,
-            COMMA   = 48,
-            COLON   = 49,
-            EOF     = 50,
-            TRUE    = 51,
-            FALSE   = 52,
-            NULL    = 53,
-            INTEGER = 54,
-            DECIMAL = 55,
-            RANGE   = 56,
-            STRING  = 57,
-            DATETIME= 58,
-            DURATION= 59,
-            FUNCTION= 60,
-            IDENTIFIER= 61,
-            WS      = 62
+            PLUS    = 27,
+            MINUS   = 28,
+            STAR    = 29,
+            FSLASH  = 30,
+            EXPONENT= 31,
+            MODULO  = 32,
+            LPAREN  = 33,
+            RPAREN  = 34,
+            LBRACKET= 35,
+            RBRACKET= 36,
+            LBRACE  = 37,
+            RBRACE  = 38,
+            EQUAL   = 39,
+            LT      = 40,
+            GT      = 41,
+            LTE     = 42,
+            GTE     = 43,
+            NOTEQUAL= 44,
+            AND     = 45,
+            OR      = 46,
+            NOT     = 47,
+            DOT     = 48,
+            DOTDOT  = 49,
+            QUIZ    = 50,
+            QUIZCOLON= 51,
+            COMMA   = 52,
+            COLON   = 53,
+            EOF     = 54,
+            TRUE    = 55,
+            FALSE   = 56,
+            NULL    = 57,
+            INTEGER = 58,
+            DECIMAL = 59,
+            INTRANGE= 60,
+            STRING  = 61,
+            FUNCTION= 62,
+            IDENTIFIER= 63,
+            WS      = 64
     }
 
     public class Token

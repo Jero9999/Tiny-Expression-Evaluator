@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
+using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -39,6 +40,11 @@ namespace TinyEE
                                  ? GetCompareAST(children, children.Count - 1, context)
                                  : GetInnerAST(children, context);
                     break;
+                case TokenType.CoalesceExpression:
+                    result = children.Count >= 3
+                                 ? GetIfNullThenAST(children, children.Count - 1, context)
+                                 : GetInnerAST(children, context);
+                    break;
                 case TokenType.Negation:
                 case TokenType.NotExpression:
                     result = children.Count == 2
@@ -48,9 +54,14 @@ namespace TinyEE
                 case TokenType.Start:
                 case TokenType.Expression:
                 case TokenType.Base:
-                case TokenType.Literal:
+                case TokenType.PrimitiveLiteral:
                 case TokenType.IndexAccess://has 2 childs, but uses the first one only
                     result = GetInnerAST(children, context);
+                    break;
+                case TokenType.ConditionalExpression:
+                    result = children.Count == 5 
+                                ? GetIfThenElseAST(children[0], children[2], children[4], context) 
+                                : GetInnerAST(children, context);
                     break;
                 case TokenType.Group:
                     Debug.Assert(children.Count == 3);
@@ -74,7 +85,7 @@ namespace TinyEE
                 case TokenType.HashLiteral:
                     result = GetHashAST(children, context);
                     break;
-                case TokenType.RANGE:
+                case TokenType.INTRANGE:
                     result = GetRangeAST(node);
                     break;
                 case TokenType.INTEGER:
@@ -106,7 +117,8 @@ namespace TinyEE
             }
             return result;
         }
-
+        
+        #region Get specific expressions
         private static Expression GetRangeAST(ParseNode node)
         {
             var intStrs = node.Token.Text.Split(new[] {'.'}, StringSplitOptions.RemoveEmptyEntries);
@@ -119,13 +131,8 @@ namespace TinyEE
                 lower = upper;
                 upper = tmp;
             }
-            var range = new Range<int>(lower, upper, x => x + 1, x => x - 1, (x, y) => x > y ? 0 : y - x + 1);
+            var range = Range<int>.Numeric(lower, upper);
             return Expression.Constant(range, typeof(Range<int>));
-        }
-
-        private static int GetNumericRangeSize(int left, int right)
-        {
-            return left > right ? 0 : right - left + 1;
         }
 
         private static Expression GetHashAST(List<ParseNode> children, Expression context)
@@ -164,7 +171,6 @@ namespace TinyEE
             return Expression.NewArrayInit(typeof(object), items);
         }
 
-        #region Get specific expressions
         private static Expression GetInnerAST(IList<ParseNode> childNodes, Expression context)
         {
             if (childNodes.Count == 0)
@@ -320,6 +326,21 @@ namespace TinyEE
         {
             //Rewrite variable expressions to function calls that invoke the context (getVar) functor
             return Expression.Call(context, VariableResolverInfo, new Expression[]{Expression.Constant(variableName)});
+        }
+
+        private static Expression GetIfNullThenAST(IList<ParseNode> nodes, int start, Expression context)
+        {
+            Debug.Assert(nodes.Count >= 3 && nodes.Count % 2 == 1);
+            return start == 0 
+                    ? nodes[start].GetAST(context)
+                    : Expression.Coalesce(
+                        GetIfNullThenAST(nodes, start - 2, context), 
+                        nodes[start].GetAST(context));
+        }
+
+        private static Expression GetIfThenElseAST(ParseNode condition, ParseNode then, ParseNode @else, Expression context)
+        {
+            return Expression.Condition(condition.GetAST(context), then.GetAST(context), @else.GetAST(context));
         }
 
         private static MethodInfo _varResolverInfo;

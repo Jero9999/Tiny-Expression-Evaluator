@@ -10,10 +10,9 @@ namespace TinyEE
     {
         #region Public API
         /// <summary>
-        /// Evaluates the supplied string as an expression
+        /// Evaluates the supplied string as an expression, return the execution result
         /// </summary>
         /// <param name="expression">The expression string.</param>
-        /// <returns></returns>
         public static T Evaluate<T>(string expression)
         {
             return new ParsedExpression<T>(expression).Evaluate();
@@ -26,39 +25,35 @@ namespace TinyEE
         /// </summary>
         /// <param name="expression">The expression string.</param>
         /// <param name="context">The context object.</param>
-        /// <returns></returns>
         public static T Evaluate<T>(string expression, object context)
         {
             return new ParsedExpression<T>(expression).Evaluate(context);
         }
 
         /// <summary>
-        /// Evaluates the specified expression.
+        /// Evaluates the specified expression, using a delegate to resolve variables.
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="expression">The expression.</param>
-        /// <param name="getVar">The get var.</param>
-        /// <returns></returns>
-        public static T Evaluate<T>(string expression, Func<string, object> getVar)
+        /// <param name="fnResolver">The variable resolver, it takes a name and returns the variable with that name.</param>
+        public static T Evaluate<T>(string expression, Func<string, object> fnResolver)
         {
-            return new ParsedExpression<T>(expression).Evaluate(getVar);
+            return new ParsedExpression<T>(expression).Evaluate(fnResolver);
         }
 
         /// <summary>
         /// Parse and an expression 
         /// </summary>
         /// <param name="expression">The expression.</param>
-        /// <returns></returns>
         public static ParsedExpression<T> Parse<T>(string expression)
         {
             return new ParsedExpression<T>(expression);
         }
 
         /// <summary>
-        /// Compiles the specified expression so that it can be called multiple times, in different context without incurring the cost of scanning, parsing, and AST transforming
+        /// Compiles the specified expression so that it can be called multiple times, in different context without incurring the cost of scanning, parsing, and transforming the AST
         /// </summary>
         /// <param name="expression">The expression.</param>
-        /// <returns></returns>
         public static CompiledExpression<T> Compile<T>(string expression)
         {
             return new ParsedExpression<T>(expression).Compile();
@@ -67,23 +62,24 @@ namespace TinyEE
         /// <summary>
         /// Returns a wrapper that convert instance method calls to static ones
         /// </summary>
-        /// <returns></returns>
         public static dynamic Functions<T>()
         {
             return new FunctionsWrapper(typeof(T));
         }
 
         /// <summary>
-        /// Gets the variables.
+        /// Gets the list of variables used in an expression
         /// </summary>
         /// <param name="expression">The expression.</param>
-        /// <returns></returns>
         public static IEnumerable<string> GetVariables(string expression)
         {
             return new ParsedExpression<object>(expression).Variables;
         }
         #endregion
 
+        /// <summary>
+        /// Cache the parser
+        /// </summary>
         internal static readonly Lazy<Parser> ParserInit = new Lazy<Parser>(() => new Parser(new Scanner()), true);
     }
 }

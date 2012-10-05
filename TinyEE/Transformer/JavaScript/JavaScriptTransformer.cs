@@ -40,7 +40,7 @@ namespace TinyEE.JavaScript
                 case TokenType.Start:
                 case TokenType.Expression:
                 case TokenType.Base:
-                case TokenType.Literal:
+                case TokenType.PrimitiveLiteral:
                 case TokenType.IndexAccess://has 2 childs, but uses the first one only
                     result = GetInnerJsExpr(childNodes, options);
                     break;

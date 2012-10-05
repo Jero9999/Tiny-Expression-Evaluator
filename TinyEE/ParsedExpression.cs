@@ -46,16 +46,26 @@ namespace TinyEE
         #endregion
 
         #region Eval
+        /// <summary>
+        /// Compile
+        /// </summary>
         public CompiledExpression<T> Compile()
         {
             return new CompiledExpression<T>(SyntaxTree.Compile());
         }
 
+        /// <summary>
+        /// Evaluates
+        /// </summary>
+        /// <returns></returns>
         public T Evaluate()
         {
             return Compile().Evaluate();
         }
 
+        /// <summary>
+        /// Evaluates the specified context.
+        /// </summary>
         public T Evaluate(object context)
         {
             return Compile().Evaluate(context);
@@ -76,7 +86,6 @@ namespace TinyEE
         {
             return ParseTree.GetJsExpr(options ?? new JsTransformationOptions());
         }
-
         #endregion
 
         #region Private
@@ -117,7 +126,7 @@ namespace TinyEE
         {
             var contextExpr = Expression.Parameter(typeof(Func<string, object>), "context");
             var expressionTree = parseTree.GetAST(contextExpr);
-            return Expression.Lambda<Func<Func<string, object>, T>>(Expression.Convert(expressionTree, typeof (T)), contextExpr);
+            return Expression.Lambda<Func<Func<string, object>, T>>(Expression.TypeAs(expressionTree, typeof (T)), contextExpr);
         }
         #endregion
 
@@ -141,13 +150,13 @@ namespace TinyEE
 
         public bool Equals(ParsedExpression<T> other)
         {
-            return Equals(other.Text, Text);
+            return Equals(other._text, _text);
         }
 
         public override int GetHashCode()
         {
             return _text.GetHashCode();
-        } 
+        }
         #endregion
     }
 }

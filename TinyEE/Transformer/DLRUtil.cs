@@ -12,12 +12,12 @@ namespace TinyEE
     {
         internal static CallSiteBinder GetUnaryBinder(TokenType tokenType)
         {
-            return Binder.UnaryOperation(CSharpBinderFlags.None, GetExpressionType(tokenType), null, GetArgInfo(1));
+            return Binder.UnaryOperation(CSharpBinderFlags.CheckedContext, GetExpressionType(tokenType), null, GetArgInfo(1));
         }
 
         internal static CallSiteBinder GetBinaryBinder(TokenType tokenType)
         {
-            return Binder.BinaryOperation(CSharpBinderFlags.None, GetExpressionType(tokenType), null, GetArgInfo(2));
+            return Binder.BinaryOperation(CSharpBinderFlags.CheckedContext, GetExpressionType(tokenType), null, GetArgInfo(2));
         }
 
         public static CallSiteBinder GetFieldPropertyBinder(string name)
