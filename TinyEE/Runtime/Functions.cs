@@ -1,9 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Numerics;
 
 namespace TinyEE
 {
+    /// <summary>
+    /// A container for built in functions, some of which are a part of the runtime
+    /// </summary>
     public static class Functions
     {
         //TODO: unit test these functions, too
@@ -26,9 +30,29 @@ namespace TinyEE
             return TimeSpan.Parse(input);
         }
 
-        public static long INT(dynamic input)
+        public static bool BOOLEAN(dynamic input)
+        {
+            return Convert.ToBoolean(input);
+        }
+
+        public static int INT(dynamic input)
+        {
+            return Convert.ToInt32(input);
+        }
+
+        public static int LONG(dynamic input)
         {
             return Convert.ToInt64(input);
+        }
+
+        public static int BIGINT(dynamic input)
+        {
+            return input is string ? BigInteger.Parse(input) : (BigInteger)input;
+        }
+
+        public static double DOUBLE(dynamic input)
+        {
+            return Convert.ToDouble(input);
         }
 
         public static decimal DECIMAL(dynamic input)
@@ -78,11 +102,6 @@ namespace TinyEE
             return Guid.NewGuid();
         }
 
-        public static Range<int> NUMBERS(int left, int right, int step = 1)
-        {
-            return new Range<int>(left, right, x => x + 1, x => x - 1, (x, y) => x > y ? 0 : y - x + 1);
-        }
-
         public static Range<DateTime> DATES(string leftStr, string rightStr)
         {
             DateTime left  = DateTime.Parse(leftStr),
@@ -92,7 +111,7 @@ namespace TinyEE
 
         public static Range<DateTime> DATES(DateTime left, DateTime right)
         {
-            return new Range<DateTime>(left, right, x => x.AddDays(1), x => x.AddDays(-1), (x, y) => x.Date > y.Date ? 0 : (y.Date - x.Date).Days + 1);
+            return Range<DateTime>.Dates(left, right);
         }
         #endregion
 
@@ -102,21 +121,14 @@ namespace TinyEE
             return kvps.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
         }
 
-        public static decimal SUMDEC(IEnumerable<dynamic> values)
+        public static dynamic SUM(IEnumerable<dynamic> values)
         {
-            return values.Aggregate(0m, (d, seed) => seed + Convert.ToDecimal(d));
+            return SUM(values.ToArray());
         }
 
-        public static long SUM(IEnumerable<dynamic> values)
+        public static dynamic SUM(params dynamic[] values)
         {
-            return values.Aggregate(0L, (i,seed) => seed + Convert.ToInt64(i));
-        }
-        #endregion
-
-        #region Flow
-        public static dynamic IF(bool condition, dynamic then, dynamic @else)
-        {
-            return condition ? then : @else;
+            return values.Aggregate(0, (i, seed) => seed + i);
         }
         #endregion
     }

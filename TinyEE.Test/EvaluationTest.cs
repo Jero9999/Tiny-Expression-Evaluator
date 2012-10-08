@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Data;
-using System.Globalization;
+using System.Numerics;
 using NUnit.Framework;
 using TinyEE;
 
@@ -12,60 +11,6 @@ namespace Formy.Evaluation.Test
     {
         //TODO:test for integer overflow
         //TODO:test each predefined functions
-
-        public struct Person
-        {
-            public string Name;
-            public int Age;
-            public bool Married;
-
-            public string this[string key]
-            {
-                get { return key; }
-            }
-
-            public string this[long index]
-            {
-                get { return index.ToString(CultureInfo.InvariantCulture); }
-            }
-
-            public override string ToString()
-            {
-                return Name + "(" + Age + ")";
-            }
-        }
-
-        private object _context;
-
-        [SetUp]
-        public void Setup()
-        {
-            var dt = new DataTable("table01A");
-            dt.Columns.AddRange(new[]
-                                    {
-                                        new DataColumn("col1"), 
-                                        new DataColumn("col2"), 
-                                        new DataColumn("col3"),
-                                        new DataColumn("col4"),
-                                        new DataColumn("col5")
-                                    });
-            dt.Rows.Add("one", 1, DateTime.Today.AddYears(1), true, 12.5m);
-            dt.Rows.Add("two", 2, DateTime.Today.AddYears(2), false, 22.5m);
-            dt.Rows.Add("three", 3, DateTime.Today.AddYears(3), true, 49.9999m);
-            dt.Rows.Add("four", 4, new DateTime(2012,12,12,12,12,12), false, 0.125m);
-            
-            _context = new Dictionary<string,object>
-            {
-                {"x",42},
-                {"table01A", dt},
-                {"array01A", new[] {1, 2, 3, 4, 5, 6, 7, 8, 9, 0}},
-                {"elizabeth", new Person{ Name = "Elizabeth", Age=27, Married = true }},
-                {"lookup", new Dictionary<string, object> {{"key1", 1}, {"key2", null}}},
-                {"echo", new Person{Name = "echo"}},
-                {"$usr", new Person{Name = "Anonymous", Age=31337}},
-            };
-        }
-
         [Test]
         [TestCase("null", null)]
         [TestCase("TRUE", true)]
@@ -107,7 +52,7 @@ namespace Formy.Evaluation.Test
         [TestCase(@"null ?: ""hello""", "hello")]
         public void ShouldRunSingleExpression(string expr, object expected)
         {
-            var actual = TEE.Evaluate<object>(expr, _context);
+            var actual = TEE.Evaluate<object>(expr, TestUtils.GetTestContext());
             Assert.AreEqual(expected, actual);
         }
 
@@ -136,13 +81,12 @@ namespace Formy.Evaluation.Test
         [TestCase("true and true and false", false)]
         [TestCase("false or false or true", true)]
         [TestCase("not (not true)", true)]
-        //[TestCase("If(100>10, Sum(Max(1,2),Max(0,1),Max(-5,3)), Sum(Min(-2,-3),Min(1,2)))", 6)]
+        [TestCase("100>10 ? Sum(1,2,3,-5) : Sum(-2,-3)", 1)]
         public void ShouldRunChainedExpression(string expr, object expected)
         {
-            var actual = TEE.Evaluate<object>(expr, _context);
+            var actual = TEE.Evaluate<object>(expr, TestUtils.GetTestContext());
             Assert.AreEqual(expected, actual);
         }
-
         
         [TestCase(@"""Hello "" + ""world""", "Hello world")]
         [TestCase(@"""Hello "" + 1", "Hello 1")]
@@ -150,7 +94,7 @@ namespace Formy.Evaluation.Test
         [TestCase(@"""Hello"" = ""Goodbye""", false)]
         public void ShouldHandleStrings(string expr, object expected)
         {
-            var actual = TEE.Evaluate<object>(expr, _context);
+            var actual = TEE.Evaluate<object>(expr, TestUtils.GetTestContext());
             Assert.AreEqual(expected, actual);
         }
 
@@ -165,100 +109,34 @@ namespace Formy.Evaluation.Test
         [TestCase("table01A.Rows[1+2][\"col\" + 2] = \"4\"", true)]
         public void ShouldRunComplexExpression(string expr, object expected)
         {
-            var actual = TEE.Evaluate<object>(expr, _context);
+            var actual = TEE.Evaluate<object>(expr, TestUtils.GetTestContext());
             Assert.AreEqual(expected, actual);
         }
 
         [Test]
-        [TestCase("null", null)]
-        [TestCase("false", false)]
-        [TestCase("FalSe", false)]
-        [TestCase("true", true)]
-        [TestCase("TruE", true)]
-        [TestCase("-2147483648", -2147483648)]
-        [TestCase("2147483647", 2147483647)]
-        [TestCase("-0", 0)]
-        [TestCase("+0", 0)]
-        [TestCase("-0.1234", -0.1234)]
-        [TestCase("+0.1234", 0.1234)]
-        [TestCase(@"""Hello""", "Hello")]
-        [TestCase(@"""A Review of \""A Tale of Two Cities\"" and \""Moby Dick\""""", "A Review of \"A Tale of Two Cities\" and \"Moby Dick\"")]
-        [TestCase(@"""사랑해""", "사랑해")]
-        public void ShouldRunPrimitiveLiteralExpressions(string expr, object expected)
-        {
-            var actual = TEE.Evaluate<object>(expr);
-            Assert.AreEqual(expected, actual);
-        }
-
-        [Test]
-        [TestCase("0..12", 0 , 12, 13)]
-        [TestCase("1..12", 1, 12, 12)]
-        public void ShouldRunRangeLiteralExpression(string range, int left, int right, int count)
-        {
-            var range1 = TEE.Evaluate<Range<int>>(range);
-            Assert.AreEqual(left, range1.Left);
-            Assert.AreEqual(right, range1.Right);
-            Assert.AreEqual(count, range1.Size);
-            var range2 = Range<int>.Numeric(left, right);
-            Assert.AreEqual(range1, range2);
-        }
-
-        [Test]
-        public void ShouldRunListLiteralExpression()
-        {
-            var list1 = TEE.Evaluate<object[]>("[1,2,3,4,5,6,7]");
-            Assert.IsNotNull(list1);
-            Assert.AreEqual(7, list1.Length);
-
-            var list2 = TEE.Evaluate<object[]>(@"[""adam"",""eve"",""cain"",""abel""]");
-            Assert.IsNotNull(list2);
-            Assert.AreEqual(4, list2.Length);
-
-            var list3 = TEE.Evaluate<object[]>("[true, false, true]");
-            Assert.IsNotNull(list3);
-            Assert.AreEqual(3, list3.Length);
-
-            var list4 = TEE.Evaluate<object[]>(@"[1, false, """"]");
-            Assert.IsNotNull(list4);
-            Assert.AreEqual(3, list4.Length);
-
-            var list5 = TEE.Evaluate<object[]>(@"[1, array01A, $usr]", _context);
-            Assert.IsNotNull(list5);
-            Assert.AreEqual(3, list5.Length);
-            Assert.AreEqual(typeof(int), list5[0].GetType());
-            Assert.AreEqual(typeof (int[]), list5[1].GetType());
-            Assert.AreEqual(typeof(Person), list5[2].GetType());
-        }
-
-        [Test]
-        public void ShouldRunHashLiteralExpression()
-        {
-            var dict1 = TEE.Evaluate<IDictionary<string, object>>(@"{ ""a"":1,""b"":2,""c"":3,""d"":$usr, ""e"":array01A }", _context);
-            Assert.IsNotNull(dict1);
-            Assert.AreEqual(5, dict1.Count);
-            CollectionAssert.AreEquivalent(new[]{"a","b","c","d","e"}, dict1.Keys);
-            Assert.AreEqual(typeof(int), dict1["a"].GetType());
-            Assert.AreEqual(typeof(int[]), dict1["e"].GetType());
-            Assert.AreEqual(typeof(Person), dict1["d"].GetType());
-        }
-
-        [Test]
-        [ExpectedException(typeof(OverflowException))]
-        [TestCase("-2147483649")]
-        [TestCase("2147483648")]
-        [TestCase("2147483647 + 1")]
-        [TestCase("-2147483648 - 1")]
-        public void ShouldOverflow(string expr)
-        {
-            var result = TEE.Evaluate<object>(expr);
-            Assert.Fail("Result:" + result);
-        }
-
-        [Test]
-        public void ShouldFail()
+        [ExpectedException(typeof(KeyNotFoundException))]
+        public void ShouldFailWithKeyNotFoundExceptionWhenVariableNotFound()
         {
             var result = TEE.Evaluate<object>("a+b");
             Assert.Fail("Result:" + result);
+        }
+
+        [Test]
+        public void ShouldRunFuncCallExpression()
+        {
+            var r1 = TEE.Evaluate<DateTime>("TODAY()");
+            Assert.AreEqual(r1, DateTime.Today);
+
+            var r2 = TEE.Evaluate<int>("SUM(1,2,3,4)");
+            Assert.AreEqual(10, r2);
+        }
+
+        [Test]
+        [ExpectedException]
+        public void ShouldFailWhenCallingMethodWithIncorrectParam()
+        {
+            var r1 = TEE.Evaluate<BigInteger>("BIGINT(true)");
+            Assert.Fail("R1: " + r1);
         }
     }
 }

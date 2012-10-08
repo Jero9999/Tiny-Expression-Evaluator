@@ -126,7 +126,7 @@ namespace TinyEE
         {
             var contextExpr = Expression.Parameter(typeof(Func<string, object>), "context");
             var expressionTree = parseTree.GetAST(contextExpr);
-            return Expression.Lambda<Func<Func<string, object>, T>>(Expression.TypeAs(expressionTree, typeof (T)), contextExpr);
+            return Expression.Lambda<Func<Func<string, object>, T>>(Expression.Convert(expressionTree, typeof (T)), contextExpr);
         }
         #endregion
 

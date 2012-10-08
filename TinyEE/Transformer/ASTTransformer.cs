@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using System.Linq.Expressions;
-using System.Numerics;
 using System.Reflection;
 using System.Runtime.CompilerServices;
 
@@ -340,7 +339,7 @@ namespace TinyEE
 
         private static Expression GetIfThenElseAST(ParseNode condition, ParseNode then, ParseNode @else, Expression context)
         {
-            return Expression.Condition(condition.GetAST(context), then.GetAST(context), @else.GetAST(context));
+            return Expression.Condition(Expression.Convert(condition.GetAST(context), typeof(bool)), then.GetAST(context), @else.GetAST(context));
         }
 
         private static MethodInfo _varResolverInfo;
