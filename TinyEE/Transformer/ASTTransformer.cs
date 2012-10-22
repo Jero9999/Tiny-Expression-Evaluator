@@ -53,7 +53,7 @@ namespace TinyEE
                 case TokenType.Start:
                 case TokenType.Expression:
                 case TokenType.Base:
-                case TokenType.PrimitiveLiteral:
+                case TokenType.Literal:
                 case TokenType.IndexAccess://has 2 childs, but uses the first one only
                     result = GetInnerAST(children, context);
                     break;

@@ -1,11 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Net.Mail;
 using NUnit.Framework;
-using TinyEE;
 
-namespace Formy.Evaluation.Test
+namespace TinyEE.Test
 {
-    public class LiteralTest
+    public class LiteralExpressionTest
     {
         [Test]
         [TestCase("null", null)]
@@ -60,12 +60,12 @@ namespace Formy.Evaluation.Test
             Assert.IsNotNull(list4);
             Assert.AreEqual(3, list4.Length);
 
-            var list5 = TEE.Evaluate<object[]>(@"[1, array01A, $usr]", TestUtils.GetTestContext());
+            var list5 = TEE.Evaluate<object[]>(@"[1, array01A, { a:1,b:2 }]");
             Assert.IsNotNull(list5);
             Assert.AreEqual(3, list5.Length);
             Assert.AreEqual(typeof(int), list5[0].GetType());
             Assert.AreEqual(typeof(int[]), list5[1].GetType());
-            Assert.AreEqual(typeof(Person), list5[2].GetType());
+            Assert.AreEqual(typeof(IDictionary<string,object>), list5[2].GetType());
         }
 
         [Test]
@@ -75,13 +75,13 @@ namespace Formy.Evaluation.Test
             Assert.IsNotNull(dict0);
             Assert.AreEqual(0, dict0.Count);
 
-            var dict1 = TEE.Evaluate<IDictionary<string, object>>(@"{ ""a"":1,""b"":2,""c"":3,""d"":$usr, ""e"":array01A }", TestUtils.GetTestContext());
+            var dict1 = TEE.Evaluate<IDictionary<string, object>>(@"{ ""a"":1,""b"":2,""c"":3,""d"":usr, ""e"":array }", new{ usr=new SmtpClient(), array=new[]{1,2,3,4,5} });
             Assert.IsNotNull(dict1);
             Assert.AreEqual(5, dict1.Count);
             CollectionAssert.AreEquivalent(new[] { "a", "b", "c", "d", "e" }, dict1.Keys);
             Assert.AreEqual(typeof(int), dict1["a"].GetType());
             Assert.AreEqual(typeof(int[]), dict1["e"].GetType());
-            Assert.AreEqual(typeof(Person), dict1["d"].GetType());
+            Assert.AreEqual(typeof(SmtpClient), dict1["d"].GetType());
 
             var dict2 = TEE.Evaluate<IDictionary<string, object>>(@"{ ""a"":{ ""b"":{ ""c"":{ ""d"":{} } } } }");
             Assert.IsNotNull(dict2);
@@ -110,10 +110,15 @@ namespace Formy.Evaluation.Test
         [TestCase("2147483648")]
         [TestCase("2147483647 + 1")]
         [TestCase("-2147483648 - 1")]
-        public void LiteralOverflow(string expr)
+        public void IntLiteralOverflow(string expr)
         {
             var result = TEE.Evaluate<object>(expr);
             Assert.Fail("Result:" + result);
+        }
+
+        [Test]
+        public void Invalid(string expression)
+        {
         }
     }
 }

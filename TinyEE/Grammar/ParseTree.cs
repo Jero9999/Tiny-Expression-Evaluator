@@ -209,8 +209,26 @@ namespace TinyEE
                 case TokenType.MemberAccess:
                     Value = EvalMemberAccess(tree, paramlist);
                     break;
+                case TokenType.IndexAccess:
+                    Value = EvalIndexAccess(tree, paramlist);
+                    break;
                 case TokenType.Base:
                     Value = EvalBase(tree, paramlist);
+                    break;
+                case TokenType.Variable:
+                    Value = EvalVariable(tree, paramlist);
+                    break;
+                case TokenType.Group:
+                    Value = EvalGroup(tree, paramlist);
+                    break;
+                case TokenType.FunctionCall:
+                    Value = EvalFunctionCall(tree, paramlist);
+                    break;
+                case TokenType.ArgumentList:
+                    Value = EvalArgumentList(tree, paramlist);
+                    break;
+                case TokenType.Literal:
+                    Value = EvalLiteral(tree, paramlist);
                     break;
                 case TokenType.ListLiteral:
                     Value = EvalListLiteral(tree, paramlist);
@@ -223,24 +241,6 @@ namespace TinyEE
                     break;
                 case TokenType.Pair:
                     Value = EvalPair(tree, paramlist);
-                    break;
-                case TokenType.Variable:
-                    Value = EvalVariable(tree, paramlist);
-                    break;
-                case TokenType.IndexAccess:
-                    Value = EvalIndexAccess(tree, paramlist);
-                    break;
-                case TokenType.FunctionCall:
-                    Value = EvalFunctionCall(tree, paramlist);
-                    break;
-                case TokenType.ArgumentList:
-                    Value = EvalArgumentList(tree, paramlist);
-                    break;
-                case TokenType.PrimitiveLiteral:
-                    Value = EvalPrimitiveLiteral(tree, paramlist);
-                    break;
-                case TokenType.Group:
-                    Value = EvalGroup(tree, paramlist);
                     break;
 
                 default:
@@ -320,7 +320,37 @@ namespace TinyEE
             throw new NotImplementedException();
         }
 
+        protected virtual object EvalIndexAccess(ParseTree tree, params object[] paramlist)
+        {
+            throw new NotImplementedException();
+        }
+
         protected virtual object EvalBase(ParseTree tree, params object[] paramlist)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected virtual object EvalVariable(ParseTree tree, params object[] paramlist)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected virtual object EvalGroup(ParseTree tree, params object[] paramlist)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected virtual object EvalFunctionCall(ParseTree tree, params object[] paramlist)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected virtual object EvalArgumentList(ParseTree tree, params object[] paramlist)
+        {
+            throw new NotImplementedException();
+        }
+
+        protected virtual object EvalLiteral(ParseTree tree, params object[] paramlist)
         {
             throw new NotImplementedException();
         }
@@ -341,36 +371,6 @@ namespace TinyEE
         }
 
         protected virtual object EvalPair(ParseTree tree, params object[] paramlist)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected virtual object EvalVariable(ParseTree tree, params object[] paramlist)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected virtual object EvalIndexAccess(ParseTree tree, params object[] paramlist)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected virtual object EvalFunctionCall(ParseTree tree, params object[] paramlist)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected virtual object EvalArgumentList(ParseTree tree, params object[] paramlist)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected virtual object EvalPrimitiveLiteral(ParseTree tree, params object[] paramlist)
-        {
-            throw new NotImplementedException();
-        }
-
-        protected virtual object EvalGroup(ParseTree tree, params object[] paramlist)
         {
             throw new NotImplementedException();
         }
