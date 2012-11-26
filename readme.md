@@ -1,14 +1,11 @@
-Tiny Expression Evaluator (or TinyEE) strives to be the simplest expression language for .NET, ever.
+Tiny Expression Evaluator (or TinyEE) is a simple expression language running on .NET's Dynamic Language Runtime.
 
 Its main strengths are:
 
-1. Easy to use and integrate
-2. Supports a wide array of syntaxes: operator chaining, nested indexer & property access, method call...
-3. Minimal code base, running on .NET 4's reliable Dynamic Language Runtime (DLR)
-4. Supports compiled expression
-5. Supports translation to JavaScript
+1. Simple syntax: everything is an expression that returns a value. There is no branching, looping, assignment or side-effect to worry about.
+2. Easy to use and integrate with other system. The dll is tiny and there is no external dependency other than the core .NET framework
 
-It is ideal for cases when you want to give users a lot of power (for example: a rule engine, or a validation engine), but not so much they can compromise the security of your system. Its ability to translate expressions into JavaScript is especially useful when you have to unify server-side and client-side validations.
+It's designed to be a power tool for domain experts to define rules and calculations that augment an existing system.
 
 ##Quick start
 The easiest way to use TinyEE is to call its static method Tee.Evaluate(expression) :
@@ -17,14 +14,14 @@ The easiest way to use TinyEE is to call its static method Tee.Evaluate(expressi
 TEE.Evaluate("2^20") //returns 1048576
 ```
 
-To use variables, you can put in an object as the second parameter (dictionary and callback delegate are also supported).
+To use variables in your expression, pass in an object as the second parameter (dictionary and callback delegate are also supported).
 
 ```csharp
 TEE.Evaluate("z = (x+y)^3 = x^3 + 3*x^2*y + 3*x*y^2 + y^3", new{x=3,y=2,z=125})
 //returns True
 ```
 
-For cases when an expression is evaluated over and over again (such as in a plotting program), you can improve performance using cached compilation. The struct returned by Compiled() holds a reference to a compiled delegate, which can be invoked repeatedly without incurring any parsing:
+For cases when an expression is evaluated multiple times (such as in a plotting app), you can improve performance using cached compilation. The struct returned by Compiled() holds a reference to a compiled delegate, which can be invoked repeatedly without incurring any parsing overhead:
 
 ```csharp
 var expr = parsedExpr.Compile("x^3 + 3*x^2*y + 3*x*y^2 + y^3");//compiled
@@ -32,21 +29,17 @@ var result1 = expr.Evaluate(new{x=2,y=3});//result1 = 125
 var result2 = expr.Evaluate(new{x=5,y=4});//result2 = 729
 ```
 
-To get the list of variables from an expression, or to translate it to JavaScript, get a ParsedExpression:
+To get the list of variables in an expression, get a ParsedExpression:
 
 ```csharp
 var parsedExpr = TEE.Parse("z = x^3 + 3*x^2*y + 3*x*y^2 + y^3");
 var variables = parsedExpr.Variables;//variables = [z,x,y]
-var jsExpr = parsedExpr.TranslateToJs();//extension method
-//jsExpr = "z===Math.pow(x,3)+3*Math.pow(x,2)*y+3*x*Math.pow(y,2)+Math.pow(y,3)"
 ```
 
 ##Syntax Reference
-
-Here's some general notes about the syntax:
-* Most of it follows that of C#, JavasSript and Excel formula.
-* Basically, everything is an expression that can be evaluated to a value.
-* Everything is dynamic so there's little need for type casting
+The syntax borrows a lot from C#, JavaScript and Excel formula. When in doubt, there are 2 things to remember: 
+* Everything is a value expression.
+* Everything is dynamic.
 
 **Literal data types**
 
@@ -55,28 +48,49 @@ Here's some general notes about the syntax:
 		<tr>
 			<th>Type</th>
 			<th>Example</th>
+			<th>CLR type</th>
 		</tr>
 	</thead>
 	<tbody>
 		<tr>
+			<td>Null</td>
+			<td>null</td>
+			<td>null</td>
+		</tr>
+		<tr>
 			<td>String</td>
 			<td>"A Review of \"A Tale of Two Cities\" and \"Moby Dick\""</td>
+			<td>System.String</td>
 		</tr>
 		<tr>
 			<td>Boolean</td>
 			<td>True, False</td>
+			<td>System.Boolean</td>
 		</tr>
 		<tr>
 			<td>Integer</td>
 			<td>-1234567890</td>
+			<td>System.Int32</td>
 		</tr>
 		<tr>
 			<td>Decimal</td>
 			<td>+1234567890.555</td>
+			<td>System.Double</td>
 		</tr>
 		<tr>
-			<td>Null</td>
-			<td>null</td>
+			<td>Integer range</td>
+			<td>0..1048576</td>
+			<td>IEnumerable&lt;int&gt; (lazily-evaluated)</td>
+		</tr>
+		<tr>
+			<td>List</td>
+			<td>["a string", 12, true, [0,1,2]]</td>
+			<td>Object[]</td>
+		</tr>
+		<tr>
+			<td>Hash</td>
+			<td>{ "name":"Yoda", "age":900, "isMaster":true }</td>
+			<td>Dictionary&lt;string,object&gt;</td>
 		</tr>
 	</tbody>
 </table>
@@ -103,6 +117,10 @@ Here's some general notes about the syntax:
 		<tr>
 			<td>Multiplication</td>
 			<td>x * y</td>
+		</tr>
+		<tr>
+			<td>Modulo</td>
+			<td>x % y</td>
 		</tr>
 		<tr>
 			<td>Power</td>
@@ -151,6 +169,10 @@ Here's some general notes about the syntax:
 		</tr>
 	</tbody>
 </table>
+Comparisions can also be chained, and the evaluation order is from left to right:
+```csharp
+(0 < x < 10) = (0 < x and x < 10)
+```
 
 **Logical**
 <table>
@@ -188,46 +210,36 @@ Here's some general notes about the syntax:
 	<tbody>
 		<tr>
 			<td>Variable</td>
-			<td>x, y, z</td>
-			<td>Variable names are case-sensitive, x and X are not the same.</td>
-		</tr>
-		<tr>
-			<td>Variable with callable methods</td>
-			<td>$sys, $usr</td>
-			<td></td>
+			<td>x + $math.Max(y,z)</td>
+			<td>Variable names are case-sensitive, x and X are not the same. Their names must start with a character or the dollar sign ($).</td>
 		</tr>
 		<tr>
 			<td>Method call</td>
-			<td>$x:GetName(y)</td>
+			<td>"anton".ToUpper()</td>
 			<td></td>
 		</tr>
 		<tr>
 			<td>Member Access</td>
-			<td>person1.Name.Length</td>
+			<td>person.Name.Length</td>
 			<td></td>
 		</tr>
 		<tr>
 			<td>Indexer Access</td>
-			<td>table01.Rows[0]["column-0"]</td>
+			<td>table.Rows[0]["column-0"]</td>
 			<td></td>
 		</tr>
 		<tr>
 			<td>Global function call</td>
-			<td>IF(x>0, SUM(x,y), 0)</td>
-			<td>Note that global function names are case-insensitive, SUM() and sum() are the same.</td>
+			<td>SUM(x,y)</td>
+			<td>Note that global function names are allow to be case-insensitive, SUM() and sum() are the same.</td>
 		</tr>
 		<tr>
 			<td>Grouping</td>
 			<td>(x + y) * z</td>
-                        <td></td>
+			<td></td>
 		</tr>
 	</tbody>
 </table>
-**List of global functions**
-Most of the global functions are simple relays for static methods on System.Math, System.Linq.Enumerable and System.String
-
-//TODO
-
 
 **Chaining and nesting**
 Almost all expression can be chained or nested.
@@ -248,11 +260,7 @@ x > y > z
 **Evaluation order**
 Expressions are evaluated from left to right. The expression 2^2^2^2, for example, is evaluated as ((2^2)^2)^2 == 256 (same as in C# and Excel, but differs from Mathematical convention)
 
-**Limitation**
-The expression between the squared bracket of an indexer can only be a string or integer literal. So this is valid: ```dataTable[0]["xyz"]``` while this is not: ```dataTable[x+1][ToUpper(x.Name)]```.
-Method Calls are not chainable and can only be invoked on special variables beginning with $. So this is good: ```$usr:ToString()``` while this is not: ```x:GetType().Assembly:CreateInstance("dangerous-type")```.
-
-##API Reference
+##Main APIs
 <table>
 	<thead>
 		<tr>
