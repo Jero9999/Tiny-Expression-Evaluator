@@ -1,7 +1,6 @@
 using System;
 using System.Collections.Generic;
 using System.Data;
-using System.Globalization;
 using NUnit.Framework;
 
 namespace TinyEE.Test
@@ -16,19 +15,17 @@ namespace TinyEE.Test
         [TestCase(@"echo[""anykey""]", "anykey")]
         [TestCase(@"echo[1048576]", "1048576")]
         [TestCase(@"array01A[9]", 0)]
-        public void Valid(string expression, object expected)
-        {
-        }
-
-        [Test]
         [TestCase(@"echo.Name.Length", 4)]
         [TestCase(@"$usr.ToString()", "Anonymous(31337)")]
         [TestCase(@"table01A.Rows[0][""col1""]", "one")]
         [TestCase(@"table01A.Rows[0][""col1""].ToUpper()", "ONE")]
         [TestCase(@"table01A.Rows[0][""col1""].ToUpper().ToLower().Substring(1,2)", "ne")]
         [TestCase(@"table01A.Rows[3][""col3""]", "12/12/2012 12:12:12 PM")]
-        public void Chaining(string expression, object expected)
+        public void Valid(string expression, object expected)
         {
+            var vars = GetTestObject();
+            var result = TEE.Evaluate<object>(expression, vars);
+            Assert.AreEqual(expected, result);
         }
 
         [Test]
@@ -41,8 +38,8 @@ namespace TinyEE.Test
             var dt = new DataTable("table01A");
             dt.Columns.AddRange(new[]
                                     {
-                                        new DataColumn("col1"), 
-                                        new DataColumn("col2"), 
+                                        new DataColumn("col1"),
+                                        new DataColumn("col2"),
                                         new DataColumn("col3"),
                                         new DataColumn("col4"),
                                         new DataColumn("col5")

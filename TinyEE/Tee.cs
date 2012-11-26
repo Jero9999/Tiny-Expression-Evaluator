@@ -62,9 +62,9 @@ namespace TinyEE
         /// <summary>
         /// Returns a wrapper that convert instance method calls to static ones
         /// </summary>
-        public static dynamic Functions<T>()
+        public static dynamic WrapFunctions(Type type)
         {
-            return new FunctionsWrapper(typeof(T));
+            return new FunctionsWrapper(type);
         }
 
         /// <summary>

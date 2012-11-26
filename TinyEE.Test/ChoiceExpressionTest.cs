@@ -11,13 +11,14 @@ namespace TinyEE.Test
         [TestCase(@"null ?: ""hello""", "hello")]
         public void Valid(string expression, object expected)
         {
+            Assert.AreEqual(expected, TEE.Evaluate<object>(expression));
         }
 
         [Test]
         [TestCase("100>10 ? Sum(1,2,3,-5) : Sum(-2,-3)", 1)]
         public void Chaining(string expression, object expected)
         {
-            
+            Assert.AreEqual(expected, TEE.Evaluate<object>(expression));
         }
 
         [Test]

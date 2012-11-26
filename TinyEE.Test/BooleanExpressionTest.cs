@@ -12,6 +12,7 @@ namespace TinyEE.Test
         [TestCase("true or false", true)]
         public void Valid(string expression, bool result)
         {
+            Assert.AreEqual(result, TEE.Evaluate<bool>(expression));
         }
 
         [Test]
@@ -20,6 +21,7 @@ namespace TinyEE.Test
         [TestCase("not (not true)", true)]
         public void Chaining(string expression, bool result)
         {
+            Assert.AreEqual(result, TEE.Evaluate<bool>(expression));
         }
 
         [Test]

@@ -60,12 +60,12 @@ namespace TinyEE.Test
             Assert.IsNotNull(list4);
             Assert.AreEqual(3, list4.Length);
 
-            var list5 = TEE.Evaluate<object[]>(@"[1, array01A, { a:1,b:2 }]");
+            var list5 = TEE.Evaluate<object[]>(@"[1, [1,2,3], { ""a"":1,""b"":2 }]");
             Assert.IsNotNull(list5);
             Assert.AreEqual(3, list5.Length);
             Assert.AreEqual(typeof(int), list5[0].GetType());
-            Assert.AreEqual(typeof(int[]), list5[1].GetType());
-            Assert.AreEqual(typeof(IDictionary<string,object>), list5[2].GetType());
+            Assert.AreEqual(typeof(object[]), list5[1].GetType());
+            Assert.AreEqual(typeof(Dictionary<string,object>), list5[2].GetType());
         }
 
         [Test]

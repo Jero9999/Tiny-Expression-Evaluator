@@ -75,7 +75,6 @@ namespace TinyEE.Test
             Assert.AreEqual(expected, TEE.Evaluate<object>(expression));
         }
 
-        //TODO:test more failing cases
         [Test]
         [ExpectedException]
         [TestCase("BIGINT(true)")]

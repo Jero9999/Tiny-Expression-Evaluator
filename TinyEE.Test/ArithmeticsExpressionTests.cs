@@ -39,6 +39,7 @@ namespace TinyEE.Test
         [TestCase("2*(3+1)", 8)]
         public void Chaining(string expression, object expected)
         {
+            Assert.AreEqual(expected, TEE.Evaluate<object>(expression));
         }
 
         [Test]
