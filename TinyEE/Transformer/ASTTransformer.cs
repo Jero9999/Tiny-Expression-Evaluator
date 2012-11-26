@@ -272,12 +272,6 @@ namespace TinyEE
                 else if (@operator.Type == TokenType.LBRACKET)
                 {
                     var indexExpr = nodes[start].GetAST(context);
-                    //convert long to int32 as most indexer in .NET are by int32 (pragmatic decision)
-                    if(indexExpr.Type == typeof(long))
-                    {
-                        indexExpr = Expression.Convert(indexExpr, typeof (int));
-                    }
-
                     result = Expression.Dynamic(DLRUtil.GetIndexBinder(),
                                                 typeof(object),
                                                 baseExpr,
