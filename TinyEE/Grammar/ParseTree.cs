@@ -9,12 +9,12 @@ namespace TinyEE
 {
     #region ParseTree
     [Serializable]
-    public class ParseErrors : List<ParseError>
+    internal class ParseErrors : List<ParseError>
     {
     }
 
     [Serializable]
-    public class ParseError
+    internal class ParseError
     {
         private string message;
         private int code;
@@ -52,7 +52,7 @@ namespace TinyEE
 
     // rootlevel of the node tree
     [Serializable]
-    public partial class ParseTree : ParseNode
+    internal partial class ParseTree : ParseNode
     {
         public ParseErrors Errors;
 
@@ -98,7 +98,7 @@ namespace TinyEE
 
     [Serializable]
     [XmlInclude(typeof(ParseTree))]
-    public partial class ParseNode
+    internal partial class ParseNode
     {
         protected string text;
         protected List<ParseNode> nodes;

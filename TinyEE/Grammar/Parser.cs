@@ -7,7 +7,7 @@ namespace TinyEE
 {
     #region Parser
 
-    public partial class Parser 
+    internal partial class Parser 
     {
         private Scanner scanner;
         private ParseTree tree;
@@ -114,7 +114,7 @@ namespace TinyEE
                 }
 
                 
-                ParseCoalesceExpression(node);
+                ParseConditionalExpression(node);
 
                 
                 tok = scanner.Scan(TokenType.COLON);
@@ -127,7 +127,7 @@ namespace TinyEE
                 }
 
                 
-                ParseCoalesceExpression(node);
+                ParseConditionalExpression(node);
             }
 
             parent.Token.UpdateRange(node.Token);

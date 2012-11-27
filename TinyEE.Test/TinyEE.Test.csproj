@@ -45,7 +45,7 @@
     <Compile Include="ArithmeticsExpressionTests.cs" />
     <Compile Include="BooleanExpressionTest.cs" />
     <Compile Include="BuiltInFunctionsTests.cs" />
-    <Compile Include="ChoiceExpressionTest.cs" />
+    <Compile Include="BranchingExpressions.cs" />
     <Compile Include="ComparisionExpressionTest.cs" />
     <Compile Include="GeneralTest.cs" />
     <Compile Include="LiteralExpressionTest.cs" />

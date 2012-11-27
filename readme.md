@@ -2,7 +2,7 @@ Tiny Expression Evaluator (or TinyEE) is a simple expression language running on
 
 Its main strengths are:
 
-1. Simple syntax: everything is an expression that returns a value. There is no branching, looping, assignment or side-effect to worry about.
+1. Simple syntax: everything is an expression that returns a value. There is no looping, assignment or side-effect to worry about.
 2. Easy to use and integrate with other system. The dll is tiny and there is no external dependency other than the core .NET framework
 
 It's designed to be a power tool for domain experts to define rules and calculations that augment an existing system.
@@ -241,6 +241,29 @@ Comparisions can also be chained, and the evaluation order is from left to right
 	</tbody>
 </table>
 
+**Branching**
+<table>
+	<thead>
+		<tr>
+			<th>Type<th>
+			<th>Example<th>
+			<th>Note<th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>Conditional</td>
+			<td>booleanVar ? "value-if-true" : "value-if-false"</td>
+			<td></td>
+		</tr>
+		<tr>
+			<td>Coalescing</td>
+			<td>nullableVar ?: "fallback-value"</td>
+			<td>This is similar to c#'s ?? operator or Javascript's use of ||. Unlike Javasript, however, this operator does not perform type conversion.</td>
+		</tr>
+	</tbody>
+</table>
+
 **Chaining and nesting**
 Almost all expression can be chained or nested.
 
@@ -250,15 +273,57 @@ table01A.Rows[3]["col3"]
 ```
 * Function call:
 ```
-If(100>10, Sum(Max(1,2),Max(0,1),Max(-5,3)), Sum(Min(-2,-3),Min(1,2)))
+100>10 ? Sum(Max(1,2),Max(0,1),Max(-5,3)) : Sum(Min(-2,-3),Min(1,2))
 ```
 * Comparision:
 ```
 x > y > z
 ```
+* Conditional:
+```
+condition1
+    ? "value 1"
+    : condition2
+        ? "value 2"
+        : "value 3"
+```
 
-**Evaluation order**
-Expressions are evaluated from left to right. The expression 2^2^2^2, for example, is evaluated as ((2^2)^2)^2 == 256 (same as in C# and Excel, but differs from Mathematical convention)
+**Operator precedence and associativity**
+
+The following table shows all operators in order of precedence from highest to lowest:
+
+<table>
+	<thead>
+		<tr>
+			<th>Operator type</th>
+			<th>Operator</th>
+		</tr>
+	</thead>
+	<tbody>
+		<tr>
+			<td>Primary</td>
+			<td>() f(x) x[y] x.y </td>
+		</tr>
+		<tr>
+			<td>Arithmetics</td>
+			<td>- ^ * / % + -</td>
+		</tr>
+		<tr>
+			<td>Comparison</td>
+			<td>= &gt; &lt; &gt;= &lt;= &lt;&gt;</td>
+		</tr>
+		<tr>
+			<td>Boolean</td>
+			<td>not and or</td>
+		</tr>
+		<tr>
+			<td>Branching</td>
+			<td>x?:y  x?y:z</td>
+		</tr>
+	</tbody>
+</table>
+
+All expressions are evaluated from left to right. The expression 2^2^2^2, for example, is evaluated as ((2^2)^2)^2 == 256 (same as in C# and Excel (but differs from Mathematical convention))
 
 ##Main APIs
 <table>

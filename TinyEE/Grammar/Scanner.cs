@@ -9,7 +9,7 @@ namespace TinyEE
 {
     #region Scanner
 
-    public partial class Scanner
+    internal partial class Scanner
     {
         public string Input;
         public int StartPos = 0;
@@ -303,7 +303,7 @@ namespace TinyEE
 
     #region Token
 
-    public enum TokenType
+    internal enum TokenType
     {
 
             //Non terminal tokens:
@@ -378,7 +378,7 @@ namespace TinyEE
             WS      = 64
     }
 
-    public class Token
+    internal class Token
     {
         private int startpos;
         private int endpos;

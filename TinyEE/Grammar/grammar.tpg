@@ -41,7 +41,7 @@ IDENTIFIER  -> @"[a-zA-Z_$][a-zA-Z0-9_$]*";
 
 Start                 -> Expression ? EOF;
 Expression            -> ConditionalExpression;
-ConditionalExpression -> CoalesceExpression (QUIZ CoalesceExpression COLON CoalesceExpression)?;
+ConditionalExpression -> CoalesceExpression (QUIZ ConditionalExpression COLON ConditionalExpression)?;
 CoalesceExpression    -> OrExpression (QUIZCOLON OrExpression)*;
 OrExpression          -> AndExpression (OR AndExpression)*;
 AndExpression         -> NotExpression (AND NotExpression)*;
