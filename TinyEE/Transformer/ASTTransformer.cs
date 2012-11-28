@@ -318,7 +318,7 @@ namespace TinyEE
         private static Expression GetVariableAST(string variableName, Expression context)
         {
             //Rewrite variable expressions to function calls that invoke the context (getVar) functor
-            return Expression.Call(context, VariableResolverInfo, new Expression[]{Expression.Constant(variableName)});
+            return Expression.Invoke(context, Expression.Constant(variableName, typeof(string)));
         }
 
         private static Expression GetIfNullThenAST(IList<ParseNode> nodes, int start, Expression context)
@@ -334,12 +334,6 @@ namespace TinyEE
         private static Expression GetIfThenElseAST(ParseNode condition, ParseNode then, ParseNode @else, Expression context)
         {
             return Expression.Condition(Expression.Convert(condition.GetAST(context), typeof(bool)), then.GetAST(context), @else.GetAST(context));
-        }
-
-        private static MethodInfo _varResolverInfo;
-        public static MethodInfo VariableResolverInfo
-        {
-            get { return _varResolverInfo ?? (_varResolverInfo = typeof(Func<string,object>).GetMethod("Invoke")); }
         }
 
         private static ConstantExpression _functionsExpr;
