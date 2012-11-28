@@ -1,6 +1,6 @@
 ﻿namespace TinyEE.JavaScript
 {
-    public enum VariableMode
+    internal enum VariableMode
     {
         None, LocalScope, Callback
     }

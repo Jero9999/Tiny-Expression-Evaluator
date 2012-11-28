@@ -1,6 +1,6 @@
 ﻿namespace TinyEE.JavaScript
 {
-    public class JsTransformationOptions
+    internal class JsTransformationOptions
     {
         public VariableMode VariableMode { get; set; }
         public string FunctionNamespace { get; set; }

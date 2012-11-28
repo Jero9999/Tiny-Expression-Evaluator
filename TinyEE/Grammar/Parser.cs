@@ -2,7 +2,7 @@
 
 using System;
 using System.Collections.Generic;
-
+#pragma warning disable 168
 namespace TinyEE
 {
     #region Parser
@@ -77,7 +77,9 @@ namespace TinyEE
 
         private void ParseExpression(ParseNode parent)
         {
+
             Token tok;
+
             ParseNode n;
             ParseNode node = parent.CreateNode(scanner.GetToken(TokenType.Expression), "Expression");
             parent.Nodes.Add(node);
@@ -1088,3 +1090,4 @@ namespace TinyEE
 
     #endregion Parser
 }
+#pragma warning restore 168

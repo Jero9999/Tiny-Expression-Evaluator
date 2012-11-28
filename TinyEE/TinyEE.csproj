@@ -22,6 +22,8 @@
     <DefineConstants>DEBUG;TRACE</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
+    <TreatWarningsAsErrors>true</TreatWarningsAsErrors>
+    <DocumentationFile>bin\Debug\TinyEE.XML</DocumentationFile>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>pdbonly</DebugType>
@@ -40,6 +42,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Cache.cs" />
     <Compile Include="CompiledExpression.cs" />
     <Compile Include="Grammar\Parser.cs" />
     <Compile Include="Grammar\ParseTree.cs" />
@@ -56,6 +59,7 @@
     <Compile Include="Tee.cs" />
     <Compile Include="Transformer\JavaScript\JsTransformationOptions.cs" />
     <Compile Include="Transformer\JavaScript\VariableMode.cs" />
+    <Compile Include="Utils\VariableEnumerator.cs" />
   </ItemGroup>
   <ItemGroup />
   <ItemGroup>

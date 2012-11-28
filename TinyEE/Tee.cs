@@ -10,7 +10,7 @@ namespace TinyEE
     {
         #region Public API
         /// <summary>
-        /// Evaluates the supplied string as an expression, return the execution result
+        /// Evaluates the supplied string as an expression without any variable, return the execution result
         /// </summary>
         /// <param name="expression">The expression string.</param>
         public static T Evaluate<T>(string expression)
@@ -35,14 +35,14 @@ namespace TinyEE
         /// </summary>
         /// <typeparam name="T"></typeparam>
         /// <param name="expression">The expression.</param>
-        /// <param name="fnResolver">The variable resolver, it takes a name and returns the variable with that name.</param>
+        /// <param name="fnResolver">The resolver function that accept a variable's name and returns its value.</param>
         public static T Evaluate<T>(string expression, Func<string, object> fnResolver)
         {
             return new ParsedExpression<T>(expression).Evaluate(fnResolver);
         }
 
         /// <summary>
-        /// Parse and an expression 
+        /// Return a parsed expression which expose the syntax tree and other metadata
         /// </summary>
         /// <param name="expression">The expression.</param>
         public static ParsedExpression<T> Parse<T>(string expression)
@@ -60,7 +60,7 @@ namespace TinyEE
         }
 
         /// <summary>
-        /// Returns a wrapper that convert instance method calls to static ones
+        /// Returns a wrapper that convert instance method calls to static ones.
         /// </summary>
         public static dynamic WrapFunctions(Type type)
         {
@@ -77,9 +77,6 @@ namespace TinyEE
         }
         #endregion
 
-        /// <summary>
-        /// Cache the parser
-        /// </summary>
-        internal static readonly Lazy<Parser> ParserInit = new Lazy<Parser>(() => new Parser(new Scanner()), true);
+        
     }
 }

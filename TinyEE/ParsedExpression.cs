@@ -6,8 +6,19 @@ using TinyEE.JavaScript;
 
 namespace TinyEE
 {
+    /// <summary>
+    /// A wrapper around an expression's parse tree that expose the transformed abstract syntax tree.
+    /// </summary>
     public struct ParsedExpression<T>
     {
+        internal const string ContextVariableName = "_ctx";
+
+        private readonly string _text;
+        private IEnumerable<string> _variables;
+        private ParseTree _parseTree;
+        private Expression _ast;
+        private ParameterExpression _ctxExpr;
+        
         internal ParsedExpression(string text)
         {
             if(text == null)
@@ -17,145 +28,110 @@ namespace TinyEE
             _text = text;
             _parseTree = null;
             _variables = null;
+            _ast = null;
+            _ctxExpr = null;
         }
 
         #region Props
-        private readonly string _text;
+        /// <summary>
+        /// The original textual content of the expression
+        /// </summary>
         public string Text
         {
             get { return _text ?? String.Empty; }
         }
 
-        private IEnumerable<string> _variables;
+        /// <summary>
+        /// List of variables used in the expression
+        /// </summary>
         public IEnumerable<string> Variables
         {
-            get { return _variables ?? (_variables = GetVariableNamesRecursive(ParseTree).Distinct()); }
+            get { return _variables ?? (_variables = GetVariables()); }
         }
-
-        private ParseTree _parseTree;
 
         internal ParseTree ParseTree
         {
             get { return _parseTree ?? (_parseTree = ParseInternal(Text)); }
         }
 
-        internal Expression<Func<Func<string, object>, T>> SyntaxTree
+        internal ParameterExpression ContextExpression
         {
-            get { return TransformInternal(ParseTree); }
+            //The parameter for the execution tree and the syntax tree needs to be the same object
+            get { return _ctxExpr ?? (_ctxExpr = Expression.Parameter(typeof (Func<string, object>), ContextVariableName)); }
+        }
+
+        /// <summary>
+        /// The abstract syntax tree for this expression
+        /// </summary>
+        public Expression AST
+        {
+            get { return _ast ?? (_ast = ParseTree.GetAST(ContextExpression)); }
         }
         #endregion
 
         #region Eval
         /// <summary>
-        /// Compile
+        /// Return the compiled expression
         /// </summary>
         public CompiledExpression<T> Compile()
         {
-            return new CompiledExpression<T>(SyntaxTree.Compile());
+            var execTree = Expression.Lambda<Func<Func<string, object>, T>>(Expression.Convert(AST, typeof(T)), ContextExpression);
+            return new CompiledExpression<T>(execTree.Compile());
         }
 
         /// <summary>
-        /// Evaluates
+        /// Shortcut for Compile().Evaluate()
         /// </summary>
-        /// <returns></returns>
         public T Evaluate()
         {
             return Compile().Evaluate();
         }
 
         /// <summary>
-        /// Evaluates the specified context.
+        /// Shortcut for Compile().Evaluate(context)
         /// </summary>
+        /// <param name="context">The context data-object (or dictionary) whose properties (or keys) will be used as variable in the compiled expression.</param>
         public T Evaluate(object context)
         {
             return Compile().Evaluate(context);
         }
 
-        public T Evaluate(Func<string, object> contextFunctor)
-        {
-            return Compile().Evaluate(contextFunctor);
-        }
-
         /// <summary>
-        /// Translates the provided expression to Javascript.
+        /// Shortcut for Compile().Evaluate(resolver)
         /// </summary>
-        /// <typeparam name="T"></typeparam>
-        /// <param name="options">The options.</param>
-        /// <returns></returns>
-        public string TranslateToJs(JsTransformationOptions options = null)
+        /// <param name="resolver">The resolver delegate that accept the variable's name (string) and return its value. It should throw KeyNotFoundException if the variable name cannot be resolved.</param>
+        public T Evaluate(Func<string, object> resolver)
         {
-            return ParseTree.GetJsExpr(options ?? new JsTransformationOptions());
+            return Compile().Evaluate(resolver);
         }
         #endregion
 
-        #region Private
-        private static IEnumerable<string> GetVariableNamesRecursive(ParseNode node)
+        /// <summary>
+        /// (NOT COMPLETED YET) Translates the provided expression to Javascript.
+        /// </summary>
+        internal string TranslateToJs(JsTransformationOptions options = null)
         {
-            if (node.Token.Type == TokenType.Variable)
-            {
-                yield return node.Nodes[0].Token.Text;
-            }
-            else
-            {
-                if (node.Nodes.Count > 0)
-                {
-                    foreach (var childNode in node.Nodes)
-                    {
-                        foreach (var varible in GetVariableNamesRecursive(childNode))
-                        {
-                            yield return varible;
-                        }
-                    }
-                }
-            }
+            return ParseTree.GetJsExpr(options ?? new JsTransformationOptions());
+        }
+
+        #region Private
+        private IEnumerable<string> GetVariables()
+        {
+            var visitor = new VariableEnumerator(ContextVariableName);
+            visitor.Visit(AST);
+            return visitor.Variables;
         }
 
         private static ParseTree ParseInternal(string expression)
         {
-            var parseTree = TEE.ParserInit.Value.Parse(expression);
+            var parseTree = Cache.Parser.Value.Parse(expression);
             if (parseTree.Errors.Count > 0)
             {
-                var error = new FormatException("Syntax error at" + parseTree.Errors.First().Position);
+                var error = new FormatException("Syntax error at " + parseTree.Errors.First().Position);
                 error.Data["syntax_error_details"] = parseTree.Errors.ToArray();
                 throw error;
             }
             return parseTree;
-        }
-
-        private static Expression<Func<Func<string, object>, T>> TransformInternal(ParseNode parseTree)
-        {
-            var contextExpr = Expression.Parameter(typeof(Func<string, object>), "context");
-            var expressionTree = parseTree.GetAST(contextExpr);
-            return Expression.Lambda<Func<Func<string, object>, T>>(Expression.Convert(expressionTree, typeof (T)), contextExpr);
-        }
-        #endregion
-
-        #region Override Object
-        public override string ToString()
-        {
-            return _text;
-        }
-
-        public string ToString(bool dumpAST)
-        {
-            return dumpAST ? SyntaxTree.ToString() : _text;
-        }
-
-        public override bool Equals(object obj)
-        {
-            if (ReferenceEquals(null, obj)) return false;
-            if (obj.GetType() != typeof(ParsedExpression<T>)) return false;
-            return Equals((ParsedExpression<T>)obj);
-        }
-
-        public bool Equals(ParsedExpression<T> other)
-        {
-            return Equals(other._text, _text);
-        }
-
-        public override int GetHashCode()
-        {
-            return _text.GetHashCode();
         }
         #endregion
     }
