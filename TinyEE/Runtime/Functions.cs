@@ -13,17 +13,6 @@ namespace TinyEE
     {
         //NOTE: currently, all the functions available to the TinyEE runtime are hard-coded here
         //NOTE: all function names MUST be in uppercase (runtime binder ignore the case of function names found inside expressions)
-
-        #region Used internally for expression rewriting
-        /// <summary>
-        /// Create a dictionary from the list of key-value pair
-        /// </summary>
-        public static IDictionary<string, object> DICTIONARY(KeyValuePair<string, object>[] kvps)
-        {
-            return kvps.ToDictionary(kvp => kvp.Key, kvp => kvp.Value);
-        } 
-        #endregion
-
         #region Type Conversion
         /// <summary>
         /// Parse the input string as boolean

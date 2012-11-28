@@ -136,28 +136,33 @@ namespace TinyEE
 
         private static Expression GetHashAST(List<ParseNode> children, Expression context)
         {
-            var pairExprs = children.Count == 3
-                                ? GetPairsAST(children[1].Nodes, context)
-                                : Enumerable.Empty<Expression>();
-            var fnDictInfo = typeof (Functions).GetMethod("DICTIONARY");
-            return Expression.Call(fnDictInfo, Expression.NewArrayInit(typeof(KeyValuePair<string, object>), pairExprs));
+            var dictType = typeof(Dictionary<string, object>);
+            var addMethod = dictType.GetMethod("Add");
+            var pairExprs = (children.Count == 3
+                                ? GetPairsAST(children[1].Nodes, addMethod, context)
+                                : Enumerable.Empty<ElementInit>()).ToArray();
+            return pairExprs.Length == 0
+                       ? (Expression) Expression.New(typeof (Dictionary<string, object>))
+                       : Expression.ListInit(
+                           Expression.New(typeof (Dictionary<string, object>)),
+                           pairExprs
+                        );
         }
 
-        private static IEnumerable<Expression> GetPairsAST(IEnumerable<ParseNode> nodes, Expression context)
+        private static IEnumerable<ElementInit> GetPairsAST(IEnumerable<ParseNode> nodes, MethodInfo addMethod, Expression context)
         {
             return nodes.Where(node => node.Token.Type != TokenType.COMMA)
-                        .Select(n => GetPairAST(n.Nodes, context));
+                        .Select(n => GetPairAST(n.Nodes, addMethod, context));
         }
 
-        private static Expression GetPairAST(IList<ParseNode> nodes, Expression context)
+        private static ElementInit GetPairAST(IList<ParseNode> nodes, MethodInfo addMethod, Expression context)
         {
             Debug.Assert(nodes.Count == 3);
-            var keyStrExpr = GetAST(nodes[0], context);
-
-            var valueExpr = Expression.Convert(GetAST(nodes[2], context), typeof(object));
-
-            var ctor = typeof (KeyValuePair<string, object>).GetConstructor(new[] {typeof (string), typeof (object)});
-            return Expression.New(ctor, keyStrExpr, valueExpr);
+            return Expression.ElementInit(
+                                addMethod, 
+                                GetAST(nodes[0], context), 
+                                Expression.Convert(
+                                    GetAST(nodes[2], context), typeof(object)));
         }
 
         private static Expression GetListAST(IList<ParseNode> children, Expression context)
