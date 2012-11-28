@@ -5,33 +5,31 @@ using System.Linq.Expressions;
 
 namespace TinyEE
 {
-    internal static class ContextFunctor
+    internal static class Resolver
     {
         internal static object ZeroVariable(string varName)
         {
             throw new KeyNotFoundException("Variable not found");
         }
 
-        internal static Func<string, object> GetForObject(object context)
+        internal static Func<string, object> FromObject(object context)
         {
             if (context == null)
             {
-                return ZeroVariable;
+                throw new ArgumentNullException("context");
             }
-            Func<string, object> result;
             IDictionary dict;
-            if ((dict = context as IDictionary) != null)
-            {
-                result = varName => dict[varName];
-            }
-            else
-            {
-                result = GetPropFunctor(context);
-            }
-            return result;
+            return (dict = context as IDictionary) != null 
+                        ? FromDictionary(dict)
+                        : FromDataObject(context);
         }
 
-        private static Func<string,object> GetPropFunctor(object context)
+        private static Func<string,object> FromDictionary(IDictionary dictionary)
+        {
+            return varName => dictionary[varName];
+        }
+
+        private static Func<string,object> FromDataObject(object context)
         {
             var cache = new Dictionary<string, object>();
             return varName =>

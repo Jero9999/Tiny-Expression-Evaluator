@@ -17,7 +17,7 @@ namespace TinyEE
 
         internal T Evaluate()
         {
-            return _compiledExpr.Invoke(ContextFunctor.ZeroVariable);
+            return _compiledExpr.Invoke(Resolver.ZeroVariable);
         }
 
         /// <summary>
@@ -30,7 +30,7 @@ namespace TinyEE
             {
                 throw new ArgumentNullException("context");
             }
-            return _compiledExpr.Invoke(ContextFunctor.GetForObject(context));
+            return _compiledExpr.Invoke(Resolver.FromObject(context));
         }
 
         /// <summary>

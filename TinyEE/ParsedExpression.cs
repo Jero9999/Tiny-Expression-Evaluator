@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Linq.Expressions;
-using TinyEE.JavaScript;
 
 namespace TinyEE
 {
@@ -14,10 +13,10 @@ namespace TinyEE
         internal const string ContextVariableName = "_ctx";
 
         private readonly string _text;
+        private readonly ParameterExpression _ctxExpr;
+        private readonly Expression _ast;
+        
         private IEnumerable<string> _variables;
-        private ParseTree _parseTree;
-        private Expression _ast;
-        private ParameterExpression _ctxExpr;
         
         internal ParsedExpression(string text)
         {
@@ -25,11 +24,12 @@ namespace TinyEE
             {
                 throw new ArgumentNullException("text");
             }
-            _text = text;
-            _parseTree = null;
+            
+            var parseTree = ParseInternal(text);
+            _ctxExpr = Expression.Parameter(typeof(Func<string, object>), ContextVariableName);
+            _ast = parseTree.GetAST(_ctxExpr);
+            _text = parseTree.Text;
             _variables = null;
-            _ast = null;
-            _ctxExpr = null;
         }
 
         #region Props
@@ -49,23 +49,12 @@ namespace TinyEE
             get { return _variables ?? (_variables = GetVariables()); }
         }
 
-        internal ParseTree ParseTree
-        {
-            get { return _parseTree ?? (_parseTree = ParseInternal(Text)); }
-        }
-
-        internal ParameterExpression ContextExpression
-        {
-            //The parameter for the execution tree and the syntax tree needs to be the same object
-            get { return _ctxExpr ?? (_ctxExpr = Expression.Parameter(typeof (Func<string, object>), ContextVariableName)); }
-        }
-
         /// <summary>
         /// The abstract syntax tree for this expression
         /// </summary>
         public Expression AST
         {
-            get { return _ast ?? (_ast = ParseTree.GetAST(ContextExpression)); }
+            get { return _ast; }
         }
         #endregion
 
@@ -75,8 +64,8 @@ namespace TinyEE
         /// </summary>
         public CompiledExpression<T> Compile()
         {
-            var execTree = Expression.Lambda<Func<Func<string, object>, T>>(Expression.Convert(AST, typeof(T)), ContextExpression);
-            return new CompiledExpression<T>(execTree.Compile());
+            var execTree = Expression.Lambda<Func<Func<string, object>, T>>(Expression.Convert(AST, typeof(T)), _ctxExpr);
+        return new CompiledExpression<T>(execTree.Compile());
         }
 
         /// <summary>
@@ -105,14 +94,6 @@ namespace TinyEE
             return Compile().Evaluate(resolver);
         }
         #endregion
-
-        /// <summary>
-        /// (NOT COMPLETED YET) Translates the provided expression to Javascript.
-        /// </summary>
-        internal string TranslateToJs(JsTransformationOptions options = null)
-        {
-            return ParseTree.GetJsExpr(options ?? new JsTransformationOptions());
-        }
 
         #region Private
         private IEnumerable<string> GetVariables()

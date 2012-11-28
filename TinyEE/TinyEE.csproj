@@ -48,17 +48,14 @@
     <Compile Include="Grammar\ParseTree.cs" />
     <Compile Include="Grammar\Scanner.cs" />
     <Compile Include="ParsedExpression.cs" />
-    <Compile Include="Runtime\ContextFunctor.cs" />
+    <Compile Include="Runtime\Resolver.cs" />
     <Compile Include="Runtime\Range.cs" />
     <Compile Include="Transformer\DLRUtil.cs" />
     <Compile Include="Runtime\Functions.cs" />
     <Compile Include="Runtime\FunctionsWrapper.cs" />
-    <Compile Include="Transformer\JavaScript\JavaScriptTransformer.cs" />
     <Compile Include="Transformer\ASTTransformer.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Tee.cs" />
-    <Compile Include="Transformer\JavaScript\JsTransformationOptions.cs" />
-    <Compile Include="Transformer\JavaScript\VariableMode.cs" />
     <Compile Include="Utils\VariableEnumerator.cs" />
   </ItemGroup>
   <ItemGroup />
