@@ -160,7 +160,7 @@ namespace TinyEE
             Debug.Assert(nodes.Count == 3);
             return Expression.ElementInit(
                                 addMethod, 
-                                GetAST(nodes[0], context), 
+                                Expression.Constant(nodes[0].Token.Text, typeof(string)),
                                 Expression.Convert(
                                     GetAST(nodes[2], context), typeof(object)));
         }

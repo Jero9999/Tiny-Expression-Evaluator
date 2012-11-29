@@ -89,7 +89,7 @@ The syntax borrows a lot from C#, JavaScript and Excel formula. When in doubt, t
 		</tr>
 		<tr>
 			<td>Hash</td>
-			<td>{ "name":"Yoda", "age":900, "isMaster":true }</td>
+			<td>{ name:"Yoda", age:900, isMaster:true }</td>
 			<td>Dictionary&lt;string,object&gt;</td>
 		</tr>
 	</tbody>

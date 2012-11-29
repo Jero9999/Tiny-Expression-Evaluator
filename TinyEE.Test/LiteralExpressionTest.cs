@@ -60,7 +60,7 @@ namespace TinyEE.Test
             Assert.IsNotNull(list4);
             Assert.AreEqual(3, list4.Length);
 
-            var list5 = TEE.Evaluate<object[]>(@"[1, [1,2,3], { ""a"":1,""b"":2 }]");
+            var list5 = TEE.Evaluate<object[]>(@"[1, [1,2,3], { a:1,b:2 }]");
             Assert.IsNotNull(list5);
             Assert.AreEqual(3, list5.Length);
             Assert.AreEqual(typeof(int), list5[0].GetType());
@@ -75,7 +75,7 @@ namespace TinyEE.Test
             Assert.IsNotNull(dict0);
             Assert.AreEqual(0, dict0.Count);
 
-            var dict1 = TEE.Evaluate<IDictionary<string, object>>(@"{ ""a"":1,""b"":2,""c"":3,""d"":usr, ""e"":array }", new{ usr=new SmtpClient(), array=new[]{1,2,3,4,5} });
+            var dict1 = TEE.Evaluate<IDictionary<string, object>>(@"{ a:1,b:2,c:3,d:usr, e:array }", new{ usr=new SmtpClient(), array=new[]{1,2,3,4,5} });
             Assert.IsNotNull(dict1);
             Assert.AreEqual(5, dict1.Count);
             CollectionAssert.AreEquivalent(new[] { "a", "b", "c", "d", "e" }, dict1.Keys);
@@ -83,7 +83,7 @@ namespace TinyEE.Test
             Assert.AreEqual(typeof(int[]), dict1["e"].GetType());
             Assert.AreEqual(typeof(SmtpClient), dict1["d"].GetType());
 
-            var dict2 = TEE.Evaluate<IDictionary<string, object>>(@"{ ""a"":{ ""b"":{ ""c"":{ ""d"":{} } } } }");
+            var dict2 = TEE.Evaluate<IDictionary<string, object>>(@"{ a:{ b:{ c:{ d:{} } } } }");
             Assert.IsNotNull(dict2);
             Assert.IsTrue(dict2.ContainsKey("a"));
 

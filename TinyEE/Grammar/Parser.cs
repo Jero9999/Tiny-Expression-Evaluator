@@ -998,8 +998,8 @@ namespace TinyEE
             }
 
             
-            tok = scanner.LookAhead(TokenType.STRING);
-            if (tok.Type == TokenType.STRING)
+            tok = scanner.LookAhead(TokenType.IDENTIFIER);
+            if (tok.Type == TokenType.IDENTIFIER)
             {
                 ParsePairList(node);
             }
@@ -1060,12 +1060,12 @@ namespace TinyEE
 
 
             
-            tok = scanner.Scan(TokenType.STRING);
+            tok = scanner.Scan(TokenType.IDENTIFIER);
             n = node.CreateNode(tok, tok.ToString() );
             node.Token.UpdateRange(tok);
             node.Nodes.Add(n);
-            if (tok.Type != TokenType.STRING) {
-                tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found. Expected " + TokenType.STRING.ToString(), 0x1001, 0, tok.StartPos, tok.StartPos, tok.Length));
+            if (tok.Type != TokenType.IDENTIFIER) {
+                tree.Errors.Add(new ParseError("Unexpected token '" + tok.Text.Replace("\n", "") + "' found. Expected " + TokenType.IDENTIFIER.ToString(), 0x1001, 0, tok.StartPos, tok.StartPos, tok.Length));
                 return;
             }
 

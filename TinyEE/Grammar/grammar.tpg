@@ -63,4 +63,4 @@ Literal               -> STRING | DECIMAL | INTEGER | TRUE | FALSE | NULL | INTR
 ListLiteral           -> LBRACKET ArgumentList? RBRACKET;
 HashLiteral           -> LBRACE PairList? RBRACE;
 PairList              -> Pair (COMMA Pair)*;
-Pair                  -> STRING COLON Expression;
+Pair                  -> IDENTIFIER COLON Expression;
