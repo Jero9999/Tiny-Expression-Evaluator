@@ -173,6 +173,15 @@ namespace TinyEE
         {
             return TimeSpan.ParseExact(input, format, System.Globalization.CultureInfo.InvariantCulture.DateTimeFormat);
         }
+
+        /// <summary>
+        /// Generate a complex number with the real and imaginary component
+        /// </summary>
+        public static Complex COMPLEX(double real, double imaginary)
+        {
+            return new Complex(real, imaginary);
+        }
+
         #endregion
         
         #region Generator
