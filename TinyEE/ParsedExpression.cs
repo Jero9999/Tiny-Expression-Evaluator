@@ -49,13 +49,13 @@ namespace TinyEE
             get { return _variables ?? (_variables = GetVariables()); }
         }
 
-        /// <summary>
-        /// The abstract syntax tree for this expression
-        /// </summary>
-        public Expression AST
-        {
-            get { return _ast; }
-        }
+        ///// <summary>
+        ///// The abstract syntax tree for this expression
+        ///// </summary>
+        //public Expression AST
+        //{
+        //    get { return _ast; }
+        //}
         #endregion
 
         #region Eval
@@ -65,7 +65,7 @@ namespace TinyEE
         public CompiledExpression<T> Compile()
         {
             var execTree = Expression.Lambda<Func<Func<string, object>, T>>(Expression.Convert(AST, typeof(T)), _ctxExpr);
-        return new CompiledExpression<T>(execTree.Compile());
+            return new CompiledExpression<T>(execTree.Compile());
         }
 
         /// <summary>
@@ -98,9 +98,10 @@ namespace TinyEE
         #region Private
         private IEnumerable<string> GetVariables()
         {
-            var visitor = new VariableEnumerator(ContextVariableName);
-            visitor.Visit(AST);
-            return visitor.Variables;
+            throw new NotImplementedException();
+            //var visitor = new VariableEnumerator(ContextVariableName);
+            //visitor.Visit(AST);
+            //return visitor.Variables;
         }
 
         private static ParseTree ParseInternal(string expression)
