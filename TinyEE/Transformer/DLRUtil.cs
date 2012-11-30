@@ -65,8 +65,8 @@ namespace TinyEE
                 case TokenType.LTE: return ExpressionType.LessThanOrEqual;
                 case TokenType.GTE: return ExpressionType.GreaterThanOrEqual;
                 case TokenType.NOTEQUAL: return ExpressionType.NotEqual;
-                case TokenType.AND: return ExpressionType.And;
-                case TokenType.OR: return ExpressionType.Or;
+                case TokenType.AND: return ExpressionType.AndAlso;
+                case TokenType.OR: return ExpressionType.OrElse;
                 case TokenType.NotExpression: return ExpressionType.Not;
                 case TokenType.Negation: return ExpressionType.Negate;
                 default: throw new ArgumentOutOfRangeException();
